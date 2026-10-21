@@ -110,7 +110,7 @@
     "@types/proxy-addr": "^2.0.3",
     "@vitest/coverage-v8": "^4.0.18",
     "mygitnexus-shared": "file:../mygitnexus-shared",
-    "tsx": "^4.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.4.5",
     "vitest": "^4.0.18"
   },
