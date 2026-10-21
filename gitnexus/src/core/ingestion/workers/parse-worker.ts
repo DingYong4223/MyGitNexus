@@ -2109,6 +2109,9 @@ const processFileGroup = (
             })
           : null;
       const nodeLabel = extractedClassSymbol?.type ?? defaultNodeLabel;
+      const definitionIdentity = definitionNode
+        ? provider.definitionIdentity?.(definitionNode, nodeLabel)
+        : undefined;
       const isClassLikeLabel =
         nodeLabel === 'Class' ||
         nodeLabel === 'Struct' ||
@@ -2203,11 +2206,13 @@ const processFileGroup = (
         nodeLabel !== 'Constructor' &&
         !extractedClassSymbol &&
         !defaultExportHocName &&
-        !cjsDefaultExportName
+        !cjsDefaultExportName &&
+        !definitionIdentity
       )
         continue;
 
       const nodeName =
+        definitionIdentity?.name ??
         extractedClassSymbol?.name ??
         defaultExportHocName ??
         cjsDefaultExportName ??
@@ -2501,9 +2506,10 @@ const processFileGroup = (
         !enclosingClassInfo &&
         objectLiteralOwnerInfo?.ownerName === undefined;
       const qualifiedName =
-        qualifiesByEnclosingModScope && definitionNode !== undefined
+        definitionIdentity?.qualifiedName ??
+        (qualifiesByEnclosingModScope && definitionNode !== undefined
           ? qualifyByEnclosingModScope(definitionNode, qualifiedNameBeforeModScope)
-          : qualifiedNameBeforeModScope;
+          : qualifiedNameBeforeModScope);
 
       // Extract method metadata BEFORE generating node ID — parameterCount is needed
       // to disambiguate overloaded methods via #<arity> suffix in the ID.
@@ -2786,7 +2792,11 @@ const processFileGroup = (
             language === SupportedLanguages.Vue && isVueSetup
               ? isVueSetupTopLevel(nameNode || definitionNode)
               : cachedExportCheck(provider.exportChecker, nameNode || definitionNode, nodeName),
-          ...(qualifiedTypeName !== undefined ? { qualifiedName: qualifiedTypeName } : {}),
+          ...(definitionIdentity !== undefined
+            ? { qualifiedName: definitionIdentity.qualifiedName }
+            : qualifiedTypeName !== undefined
+              ? { qualifiedName: qualifiedTypeName }
+              : {}),
           ...(classTemplateArguments !== undefined && classTemplateArguments.length > 0
             ? { templateArguments: classTemplateArguments }
             : {}),

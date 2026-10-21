@@ -3,35 +3,10 @@ import { requireVendoredGrammar } from '../../../tree-sitter/vendored-grammars.j
 
 const Lua = requireVendoredGrammar('tree-sitter-lua') as Parameters<Parser['setLanguage']>[0];
 const LUA_SCOPE_QUERY = `
-(program) @scope.module
-(function) @scope.function
-(local_function) @scope.function
-
-(function
-  (function_name (identifier) @declaration.name @name)) @declaration.function @definition.function
-(function
-  (function_name (function_name_field (identifier) @declaration.owner (property_identifier) @declaration.name @name))) @declaration.function @definition.method
-(function
-  (function_name (identifier) @declaration.owner (method) @declaration.method @declaration.method-name @name)) @declaration.function @definition.method
-(local_function
-  (identifier) @declaration.name @name) @declaration.function @definition.function
-
-(local_variable_declaration
-  (variable_declarator (identifier) @declaration.name @name)) @declaration.variable @definition.variable
-(variable_declaration
-  (variable_declarator (identifier) @declaration.name @name)) @declaration.variable @definition.variable
-
-(function_call
-  (identifier) @_require
-  (arguments (string) @import.source)) @import.statement
-  (#eq? @_require "require")
-
-(function_call
-  (identifier) @reference.name) @reference.call.free
-(function_call
-  (field_expression (identifier) @reference.receiver (property_identifier) @reference.name)) @reference.call.member
-(function_call
-  (identifier) @reference.receiver (method) (arguments)) @reference.call.member
+(function) @definition.function @name
+(local_function) @definition.function @name
+(function_definition) @definition.function @name
+(variable_declarator (identifier) @name) @definition.variable
 `;
 
 let parser: Parser | undefined;

@@ -214,6 +214,13 @@ interface LanguageProviderConfig {
    *  Default: undefined (standard label assignment). */
   readonly labelOverride?: (functionNode: SyntaxNode, defaultLabel: NodeLabel) => NodeLabel | null;
 
+  /** Canonical identity for definitions whose names depend on binding context.
+   * Shared by the provider's scope captures and the graph-node writer. */
+  readonly definitionIdentity?: (
+    node: SyntaxNode,
+    label: NodeLabel,
+  ) => { readonly name: string; readonly qualifiedName: string } | undefined;
+
   // ── MRO ───────────────────────────────────────────────────────────
   /** MRO strategy for multiple inheritance resolution.
    *  Default: 'first-wins'. */

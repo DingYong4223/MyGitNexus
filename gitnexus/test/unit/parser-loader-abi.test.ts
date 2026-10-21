@@ -35,6 +35,11 @@ interface SmokeCase {
 // Keyed by the exact SOURCES key (see parser-loader.ts) so every row —
 // including `typescript:tsx` — has an explicit, asserted snippet.
 const SMOKE_CASES: Record<string, SmokeCase> = {
+  [SupportedLanguages.Lua]: {
+    language: SupportedLanguages.Lua,
+    snippet: 'local f = function() end\n',
+    rootType: 'program',
+  },
   [SupportedLanguages.JavaScript]: {
     language: SupportedLanguages.JavaScript,
     snippet: 'const x = 1;\n',

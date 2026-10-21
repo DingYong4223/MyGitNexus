@@ -4,6 +4,16 @@ All notable changes to GitNexus will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.93] - 2026-10-21
+
+### Fixed
+
+- **Lua anonymous functions** now get callable nodes and lexical scopes, including assignment initializers, table fields and inline callbacks. Calls inside a callback belong to that callback; callable arguments can resolve parameter invocations.
+- **Lua method resolution** distinguishes table owners and resolves colon calls, implicit `self` and constant string keys without creating phantom receiver functions.
+- **Lua module resolution** retains `require` aliases and resolves explicit table exports, including local function references. Scoped imports and private locals no longer produce unrelated cross-file call edges; explicit top-level global functions remain discoverable.
+- **Lua scope identity** distinguishes nested and sibling block functions with the same name. Module facts survive cached parsing; the package version invalidates pre-upgrade parse caches. Re-run `gitnexus analyze` on Lua repositories after upgrading to rebuild their graph.
+- **Lua grammar coverage** is included in the vendored grammar maintenance inventory and parser ABI smoke tests.
+
 ## [1.6.9] - 2026-07-04
 
 ### Added

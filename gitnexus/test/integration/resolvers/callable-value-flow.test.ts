@@ -33,9 +33,23 @@ const CALLABLE_FLOW_PROVIDER_COVERAGE = {
   [SupportedLanguages.Dart]: 'matrix',
   [SupportedLanguages.Vue]: 'matrix',
   [SupportedLanguages.Cobol]: 'matrix',
+  [SupportedLanguages.Lua]: 'matrix',
 } as const satisfies Record<SupportedLanguages, 'matrix' | 'dedicated'>;
 
 const PROVIDER_FLOW_CASES = [
+  {
+    language: SupportedLanguages.Lua,
+    extension: 'lua',
+    caller: 'invoke',
+    target: 'target',
+    source: `
+local function target() end
+local function invoke(callback) callback() end
+local first = target
+local second = first
+invoke(second)
+`,
+  },
   {
     language: SupportedLanguages.JavaScript,
     extension: 'js',

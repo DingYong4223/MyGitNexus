@@ -1,10 +1,13 @@
 import { SupportedLanguages } from 'gitnexus-shared';
 import { defineLanguage } from '../language-provider.js';
-import { typeConfig as rubyTypeConfig } from '../type-extractors/ruby.js';
-import { createImportResolver } from '../import-resolvers/resolver-factory.js';
-import { rubyImportConfig } from '../import-resolvers/configs/ruby.js';
 import { LUA_SCOPE_QUERY } from './lua/query.js';
-import { emitLuaScopeCaptures, interpretLuaTypeBinding } from './lua/captures.js';
+import {
+  collectLuaModuleFacts,
+  emitLuaScopeCaptures,
+  interpretLuaTypeBinding,
+} from './lua/captures.js';
+import { luaDefinitionIdentity, luaFunctionLabel } from './lua/syntax.js';
+import { resolveLuaImportTarget } from './lua/import-target.js';
 import { interpretLuaImport } from './lua/import-resolver.js';
 import {
   luaArityCompatibility,
@@ -16,9 +19,25 @@ export const luaProvider = defineLanguage({
   id: SupportedLanguages.Lua,
   extensions: ['.lua'],
   treeSitterQueries: LUA_SCOPE_QUERY,
-  typeConfig: rubyTypeConfig,
-  exportChecker: (_node, name) => !name.startsWith('_'),
-  importResolver: createImportResolver(rubyImportConfig),
+  typeConfig: {
+    declarationNodeTypes: new Set(),
+    extractDeclaration: () => {},
+    extractParameter: () => {},
+  },
+  exportChecker: (node) => {
+    for (let current = node; current; current = current.parent) {
+      if (current.type === 'local_function' || current.type === 'local_variable_declaration')
+        return false;
+    }
+    return true;
+  },
+  importResolver: (raw, from, ctx) => {
+    const target = resolveLuaImportTarget(raw, from, ctx.allFilePaths);
+    return target ? { kind: 'files', files: [target] } : null;
+  },
+  definitionIdentity: luaDefinitionIdentity,
+  labelOverride: (node) => luaFunctionLabel(node),
+  collectCaptureSideChannel: collectLuaModuleFacts,
   emitScopeCaptures: emitLuaScopeCaptures,
   interpretImport: interpretLuaImport,
   interpretTypeBinding: interpretLuaTypeBinding,

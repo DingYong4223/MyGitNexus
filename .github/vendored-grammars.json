@@ -1,6 +1,11 @@
 {
   "_comment": "Single source of truth for the VENDORED SET + policy holds, read by BOTH .github/scripts/update-vendored-grammars.mjs (weekly auto-PR bot) and .github/scripts/check-tree-sitter-upgrade-readiness.py (daily readiness report -> issue #858). The monitor also resolves each grammar's upstream from the `upstream` field here; the readiness report reads vendored ABIs from gitnexus/vendor/<name>/src/parser.c and keeps its own upstream-drift coords. A consistency-guard test asserts this set equals the gitnexus/vendor/tree-sitter-* directories. See CONTRIBUTING.md.",
   "grammars": {
+    "lua": {
+      "name": "tree-sitter-lua",
+      "upstream": { "npm": "tree-sitter-lua" },
+      "hold": "Pinned to the vendored 1.6.2 AST used by the Lua provider; validate capture compatibility before updating"
+    },
     "c": {
       "name": "tree-sitter-c",
       "upstream": { "npm": "tree-sitter-c" },

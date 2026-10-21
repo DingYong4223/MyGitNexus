@@ -6,6 +6,7 @@ import type { ScopeResolver } from '../../scope-resolution/contract/scope-resolv
 import { luaProvider } from '../lua.js';
 import { resolveLuaImportTarget } from './import-target.js';
 import { luaArityCompatibility } from './simple-hooks.js';
+import { resolveLuaReceiverMember } from './member-resolution.js';
 
 function mergeBindings(
   existing: readonly BindingRef[],
@@ -26,8 +27,11 @@ export const luaScopeResolver: ScopeResolver = {
   buildMro: (graph, parsedFiles, nodeLookup) =>
     buildMro(graph, parsedFiles, nodeLookup, defaultLinearize),
   populateOwners: (parsed: ParsedFile) => populateClassOwnedMembers(parsed),
-  isSuperReceiver: (text) => text.trim() === 'self',
-  fieldFallbackOnMethodLookup: true,
+  isSuperReceiver: () => false,
+  resolveQualifiedReceiverMember: resolveLuaReceiverMember,
+  fieldFallbackOnMethodLookup: false,
   propagatesReturnTypesAcrossImports: true,
   allowGlobalFreeCallFallback: true,
+  // Only explicit module-level globals are visible outside their lexical scope.
+  isCallableVisibleFromCaller: ({ candidate }) => !/@\d+:\d+$/.test(candidate.qualifiedName ?? ''),
 };
