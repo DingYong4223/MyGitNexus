@@ -1,4 +1,4 @@
-# Contributing to GitNexus
+# Contributing to MyGitNexus
 
 How to propose changes, run checks locally, and open pull requests.
 
@@ -8,22 +8,22 @@ This project uses the [PolyForm Noncommercial License 1.0.0](https://polyformpro
 
 ## Where to discuss
 
-- **Issues & feature ideas:** use [GitHub Issues](https://github.com/abhigyanpatwari/GitNexus/issues) for the upstream repo, or your fork’s tracker if you work from a fork.
+- **Issues & feature ideas:** use [GitHub Issues](https://github.com/DingYong4223/MyGitNexus/issues) for the upstream repo, or your fork’s tracker if you work from a fork.
 - **Community:** see the Discord link in the root [README.md](README.md).
 
 ## Development setup
 
-**Prerequisites:** Node.js — `gitnexus/` requires `^22.18.0 || >=24.11.0` and `gitnexus-web/` requires `^20.19.0 || >=22.12.0` (enforced via the `engines` field in each package). Use `nvm install` to match the local version.
+**Prerequisites:** Node.js — `mygitnexus/` requires `^22.18.0 || >=24.11.0` and `mygitnexus-web/` requires `^20.19.0 || >=22.12.0` (enforced via the `engines` field in each package). Use `nvm install` to match the local version.
 
 1. Clone the repository.
-2. **Shared package:** `cd gitnexus-shared && npm install && npm run build`
-3. **CLI / MCP package:** `cd ../gitnexus && npm install && npm run build`
-4. **Web UI (if needed):** `cd ../gitnexus-web && npm install`
+2. **Shared package:** `cd mygitnexus-shared && npm install && npm run build`
+3. **CLI / MCP package:** `cd ../mygitnexus && npm install && npm run build`
+4. **Web UI (if needed):** `cd ../mygitnexus-web && npm install`
 5. Run tests as described in [TESTING.md](TESTING.md).
 
-The CLI build imports `gitnexus-shared`, so a fresh clone must install and build
-the shared package before running `npm install` in `gitnexus/`. This is the same
-order used by the repository's `setup-gitnexus` CI action.
+The CLI build imports `mygitnexus-shared`, so a fresh clone must install and build
+the shared package before running `npm install` in `mygitnexus/`. This is the same
+order used by the repository's `setup-mygitnexus` CI action.
 
 ### Containerized development (optional)
 
@@ -69,11 +69,11 @@ Commits within a PR may use any style — only the **merged PR title** shows up 
 
 ## Before you open a PR
 
-- [ ] Tests pass for the packages you touched (`gitnexus` and/or `gitnexus-web`).
-- [ ] Typecheck passes: `npx tsc --noEmit` in `gitnexus/` and `npx tsc -b --noEmit` in `gitnexus-web/`.
+- [ ] Tests pass for the packages you touched (`mygitnexus` and/or `mygitnexus-web`).
+- [ ] Typecheck passes: `npx tsc --noEmit` in `mygitnexus/` and `npx tsc -b --noEmit` in `mygitnexus-web/`.
 - [ ] No secrets, tokens, or machine-specific paths committed.
 - [ ] Documentation updated if behavior or public CLI/MCP contract changes.
-- [ ] Every new `GITNEXUS_*` environment variable has a row in the **Environment variables** table in [README.md](README.md) — variable, default, effect, and when to tune it.
+- [ ] Every new `MYGITNEXUS_*` environment variable has a row in the **Environment variables** table in [README.md](README.md) — variable, default, effect, and when to tune it.
 - [ ] Pre-commit hook runs clean (`.husky/pre-commit` — formatting via lint-staged + typecheck for staged packages; tests run in CI only).
 
 ## Code review
@@ -119,17 +119,17 @@ Every workflow under `.github/workflows/` MUST declare a top-level `concurrency:
 
 Two workflows produce machine-readable signals on every PR. Coding agents and humans alike can rely on the names and shapes below — change them with intent.
 
-### `gitnexus/autofix`
+### `mygitnexus/autofix`
 
 `pr-autofix.yml` (untrusted) + `pr-autofix-publish.yml` (trusted) run `prettier --write` and `eslint --fix` against the PR head and surface a single ChatOps button on the PR. Three signals are emitted:
 
 | Surface           | Where                                                                                                                                                                                                                                                                                                   | Notes                                                                  |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Sticky PR comment | Top-level comment with the HTML marker `<!-- gitnexus:pr-autofix-summary -->` and heading `## :sparkles: PR Autofix`. Only posted when there is something to fix; clean PRs stay silent.                                                                                                                | Edit-in-place via marker; one comment per PR.                          |
-| Fenced JSON block | Inside the sticky, fenced as `gitnexus-autofix`. Schema `gitnexus.pr-autofix/v2` with fields `state` (`fixes-available`), `pr_number`, `head_sha`, `changed_lines`, `run_id`, and `apply_command` (literal `/autofix`). | Parseable signal — preferred over regexing prose. v1 fields preserved as a superset. |
-| Check Run         | Stable name `gitnexus/autofix` on the PR head SHA. Conclusion: `success` (clean) or `neutral` (`fixes-available`). The neutral title is `Autofix available — comment /autofix to apply`.                                                                                                                | Surfaced under PR Checks; readable via `gh pr checks <pr>`.            |
+| Sticky PR comment | Top-level comment with the HTML marker `<!-- mygitnexus:pr-autofix-summary -->` and heading `## :sparkles: PR Autofix`. Only posted when there is something to fix; clean PRs stay silent.                                                                                                                | Edit-in-place via marker; one comment per PR.                          |
+| Fenced JSON block | Inside the sticky, fenced as `mygitnexus-autofix`. Schema `mygitnexus.pr-autofix/v2` with fields `state` (`fixes-available`), `pr_number`, `head_sha`, `changed_lines`, `run_id`, and `apply_command` (literal `/autofix`). | Parseable signal — preferred over regexing prose. v1 fields preserved as a superset. |
+| Check Run         | Stable name `mygitnexus/autofix` on the PR head SHA. Conclusion: `success` (clean) or `neutral` (`fixes-available`). The neutral title is `Autofix available — comment /autofix to apply`.                                                                                                                | Surfaced under PR Checks; readable via `gh pr checks <pr>`.            |
 
-To detect outcome from an agent: `gh pr checks <pr> --json name,conclusion,output | jq '.[] | select(.name == "gitnexus/autofix")'`.
+To detect outcome from an agent: `gh pr checks <pr> --json name,conclusion,output | jq '.[] | select(.name == "mygitnexus/autofix")'`.
 
 Forks are supported. The untrusted half runs fork code with `permissions: {}` and ships the diff as an artifact; the trusted publish job consumes only the diff (data, not code) and posts the comment + check run.
 
@@ -152,12 +152,12 @@ Re-invoking `/autofix` after a successful apply is a safe no-op — the workflow
 
 ### Vendored tree-sitter grammars
 
-`.github/vendored-grammars.json` is the **single source of truth** for the vendored tree-sitter grammar **set** and each grammar's policy `hold` (the ones shipped from `gitnexus/vendor/<name>` rather than installed from npm). It lists each grammar's name, upstream coords (`npm` or `github`), and any `hold`. The monitor resolves upstreams from it; the readiness report keeps its own upstream-drift coords and reads vendored ABIs from `gitnexus/vendor/`. Two workflows read it:
+`.github/vendored-grammars.json` is the **single source of truth** for the vendored tree-sitter grammar **set** and each grammar's policy `hold` (the ones shipped from `mygitnexus/vendor/<name>` rather than installed from npm). It lists each grammar's name, upstream coords (`npm` or `github`), and any `hold`. The monitor resolves upstreams from it; the readiness report keeps its own upstream-drift coords and reads vendored ABIs from `mygitnexus/vendor/`. Two workflows read it:
 
 - `grammar-update-monitor.yml` (`.github/scripts/update-vendored-grammars.mjs`) — weekly; opens auto-PRs re-vendoring ABI-compatible upstream updates.
-- `tree-sitter-upgrade-readiness.yml` (`.github/scripts/check-tree-sitter-upgrade-readiness.py`) — daily; renders the tree-sitter-0.25 readiness report (issue #858), reading each vendored grammar's ABI from `gitnexus/vendor/<name>/src/parser.c`.
+- `tree-sitter-upgrade-readiness.yml` (`.github/scripts/check-tree-sitter-upgrade-readiness.py`) — daily; renders the tree-sitter-0.25 readiness report (issue #858), reading each vendored grammar's ABI from `mygitnexus/vendor/<name>/src/parser.c`.
 
-Sharing the manifest keeps the two aligned: a consistency-guard test asserts the manifest set equals the `gitnexus/vendor/tree-sitter-*` directories. **When you vendor a new grammar (or remove one), update `.github/vendored-grammars.json` in the same change** — otherwise that guard fails CI and the readiness report regresses to `?` placeholders.
+Sharing the manifest keeps the two aligned: a consistency-guard test asserts the manifest set equals the `mygitnexus/vendor/tree-sitter-*` directories. **When you vendor a new grammar (or remove one), update `.github/vendored-grammars.json` in the same change** — otherwise that guard fails CI and the readiness report regresses to `?` placeholders.
 
 ## AI-assisted contributions
 
@@ -165,7 +165,7 @@ If you use coding agents, follow project context files (e.g. `AGENTS.md`, `CLAUD
 
 ## Releases
 
-One workflow ships `gitnexus` to npm — `.github/workflows/publish.yml`. It
+One workflow ships `mygitnexus` to npm — `.github/workflows/publish.yml`. It
 routes between two modes based on the triggering event:
 
 - **Stable mode** — triggered by pushing any `v<X.Y.Z>` tag (no `-rc.*`
@@ -173,12 +173,12 @@ routes between two modes based on the triggering event:
   the `latest` dist-tag with a changelog-backed GitHub release. Maintainers
   are expected to tag from `main` as a convention; the workflow itself does
   not enforce branch reachability. No Docker build (RC-only). Before cutting a
-  stable release, keep `gitnexus/package.json`,
-  `gitnexus-claude-plugin/.claude-plugin/plugin.json`,
+  stable release, keep `mygitnexus/package.json`,
+  `mygitnexus-claude-plugin/.claude-plugin/plugin.json`,
   `.claude-plugin/marketplace.json`,
-  `gitnexus-claude-plugin/.codex-plugin/plugin.json`,
+  `mygitnexus-claude-plugin/.codex-plugin/plugin.json`,
   `.agents/plugins/marketplace.json`, and the matching `CHANGELOG.md` entry in
-  lockstep — the always-on `gitnexus` unit suite now fails if those manifest
+  lockstep — the always-on `mygitnexus` unit suite now fails if those manifest
   versions drift.
 - **Release-candidate mode** — runs on every push to `main` (typically a
   merged PR) plus manual `workflow_dispatch`. Docs-only changes are skipped
@@ -194,8 +194,8 @@ routes between two modes based on the triggering event:
     registry. First rc for a given base is `rc.1`.
   - After the npm publish succeeds, the workflow calls `docker.yml` as a
     reusable workflow to build and push the corresponding RC Docker images
-    (e.g. `ghcr.io/abhigyanpatwari/gitnexus:1.7.0-rc.1`, mirrored to
-    `docker.io/akonlabs/gitnexus:1.7.0-rc.1`). The images are signed
+    (e.g. `ghcr.io/DingYong4223/MyGitNexus:1.7.0-rc.1`, mirrored to
+    `docker.io/akonlabs/mygitnexus:1.7.0-rc.1`). The images are signed
     with Cosign; the OIDC identity is `docker.yml@refs/heads/main` (the
     caller's ref — see README.md § Docker for the verify command).
 
@@ -256,11 +256,11 @@ routes between two modes based on the triggering event:
 
   ```bash
   gh release create v<RC> --prerelease --generate-notes        # RC
-  gh release create v<X.Y.Z> --notes-file gitnexus/CHANGELOG.md # stable
+  gh release create v<X.Y.Z> --notes-file mygitnexus/CHANGELOG.md # stable
   ```
 
 The rc workflow never moves `latest`. To verify after a change, inspect dist-tags:
 
 ```bash
-npm view gitnexus dist-tags
+npm view mygitnexus dist-tags
 ```

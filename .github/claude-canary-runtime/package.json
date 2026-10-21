@@ -1,5 +1,5 @@
 {
-  "name": "gitnexus-claude-canary-runtime",
+  "name": "mygitnexus-claude-canary-runtime",
   "version": "0.0.0",
   "private": true,
   "engines": {

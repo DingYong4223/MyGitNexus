@@ -1,7 +1,7 @@
 """
-MCP Bridge for GitNexus
+MCP Bridge for MyGitNexus
 
-Starts the GitNexus MCP server as a subprocess and provides a Python interface
+Starts the MyGitNexus MCP server as a subprocess and provides a Python interface
 to call MCP tools. Used by the bash wrapper scripts and the augmentation layer..
 
 The bridge communicates with the MCP server via stdio using the JSON-RPC protocol.
@@ -18,8 +18,8 @@ from pathlib import Path
 from typing import Any
 
 from constants import (
-    MCP_FIND_GITNEXUS_FALLBACK_TIMEOUT_SECONDS,
-    MCP_FIND_GITNEXUS_TIMEOUT_SECONDS,
+    MCP_FIND_MYGITNEXUS_FALLBACK_TIMEOUT_SECONDS,
+    MCP_FIND_MYGITNEXUS_TIMEOUT_SECONDS,
     MCP_READ_TIMEOUT_SECONDS,
     MCP_STOP_WAIT_SECONDS,
 )
@@ -30,7 +30,7 @@ logger = logging.getLogger("mcp_bridge")
 
 class MCPBridge:
     """
-    Manages a GitNexus MCP server subprocess and proxies tool calls to it.
+    Manages a MyGitNexus MCP server subprocess and proxies tool calls to it.
     
     Usage:
         bridge = MCPBridge(repo_path="/path/to/repo")
@@ -47,19 +47,19 @@ class MCPBridge:
         self._started = False
 
     def start(self) -> bool:
-        """Start the GitNexus MCP server subprocess."""
+        """Start the MyGitNexus MCP server subprocess."""
         if self._started:
             return True
 
         try:
-            # Find gitnexus binary
-            gitnexus_cmd = self._find_gitnexus_command()
-            if not gitnexus_cmd:
-                logger.error("GitNexus not found. Install with: npm install -g gitnexus")
+            # Find mygitnexus binary
+            mygitnexus_cmd = self._find_mygitnexus_command()
+            if not mygitnexus_cmd:
+                logger.error("MyGitNexus not found. Install with: npm install -g mygitnexus")
                 return False
 
             self.process = subprocess.Popen(
-                [*gitnexus_cmd, "mcp"],
+                [*mygitnexus_cmd, "mcp"],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -71,7 +71,7 @@ class MCPBridge:
             init_result = self._send_request("initialize", {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {"name": "gitnexus-eval", "version": "0.1.0"},
+                "clientInfo": {"name": "mygitnexus-eval", "version": "0.1.0"},
             })
 
             if init_result is None:
@@ -112,7 +112,7 @@ class MCPBridge:
 
     def call_tool(self, tool_name: str, arguments: dict[str, Any] | None = None) -> dict[str, Any] | None:
         """
-        Call a GitNexus MCP tool and return the result.
+        Call a MyGitNexus MCP tool and return the result.
         
         Returns the tool result content or None on error.
         """
@@ -152,34 +152,34 @@ class MCPBridge:
                 return contents[0].get("text", "")
         return None
 
-    def _find_gitnexus_command(self) -> list[str] | None:
-        """Find the gitnexus CLI command prefix."""
+    def _find_mygitnexus_command(self) -> list[str] | None:
+        """Find the mygitnexus CLI command prefix."""
         # Check if npx is available (preferred - uses local install)
         try:
             result = subprocess.run(
-                ["npx", "gitnexus", "--version"],
+                ["npx", "mygitnexus", "--version"],
                 stdin=subprocess.DEVNULL,
                 capture_output=True,
                 text=True,
-                timeout=MCP_FIND_GITNEXUS_TIMEOUT_SECONDS,
+                timeout=MCP_FIND_MYGITNEXUS_TIMEOUT_SECONDS,
                 cwd=self.repo_path,
             )
             if result.returncode == 0:
-                return ["npx", "gitnexus"]
+                return ["npx", "mygitnexus"]
         except Exception:
             pass
 
         # Check for global install
         try:
             result = subprocess.run(
-                ["gitnexus", "--version"],
+                ["mygitnexus", "--version"],
                 stdin=subprocess.DEVNULL,
                 capture_output=True,
                 text=True,
-                timeout=MCP_FIND_GITNEXUS_FALLBACK_TIMEOUT_SECONDS,
+                timeout=MCP_FIND_MYGITNEXUS_FALLBACK_TIMEOUT_SECONDS,
             )
             if result.returncode == 0:
-                return ["gitnexus"]
+                return ["mygitnexus"]
         except Exception:
             pass
 
@@ -341,7 +341,7 @@ class MCPToolCLI:
             args = self._parse_simple_args(args_json)
 
         if not self.bridge.start():
-            print("ERROR: Failed to start GitNexus MCP bridge", file=sys.stderr)
+            print("ERROR: Failed to start MyGitNexus MCP bridge", file=sys.stderr)
             return 1
 
         try:

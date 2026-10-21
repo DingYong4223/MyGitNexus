@@ -30,9 +30,9 @@ echo "[install-deps] 1/4: chown workspace node_modules + npm cache mount points"
 # regular files and directories `-h` does nothing, so the ownership fix is the
 # same.
 for d in /workspace/node_modules \
-         /workspace/gitnexus/node_modules \
-         /workspace/gitnexus-web/node_modules \
-         /workspace/gitnexus-shared/node_modules \
+         /workspace/mygitnexus/node_modules \
+         /workspace/mygitnexus-web/node_modules \
+         /workspace/mygitnexus-shared/node_modules \
          /home/node/.npm; do
     sudo find "$d" -xdev -exec chown -h node:node {} +
 done
@@ -45,24 +45,24 @@ echo "[install-deps] 2/4: clear stale .husky/_ runtime cache"
 # Husky upstream has no fix for this UID clash.
 rm -rf .husky/_
 
-echo "[install-deps] 3/4: npm install at root, then gitnexus-shared (build required)"
+echo "[install-deps] 3/4: npm install at root, then mygitnexus-shared (build required)"
 # Install order matters. Root goes first, for lint-staged, husky, and prettier.
-# Then gitnexus-shared, which must be built before installing gitnexus-web or
-# gitnexus. Both of those depend on it via `file:../gitnexus-shared`.
+# Then mygitnexus-shared, which must be built before installing mygitnexus-web or
+# mygitnexus. Both of those depend on it via `file:../mygitnexus-shared`.
 npm install
-cd /workspace/gitnexus-shared
+cd /workspace/mygitnexus-shared
 npm install
 npm run build
 
-echo "[install-deps] 4/4: npm install gitnexus-web, then gitnexus"
-# gitnexus-web goes before gitnexus. The gitnexus `prepare` script runs
-# scripts/build.js, which compiles gitnexus-web when that directory is present.
-# In the devcontainer the whole workspace is bind-mounted, so gitnexus-web/ is
-# present when gitnexus installs. The production Dockerfiles COPY only selected
+echo "[install-deps] 4/4: npm install mygitnexus-web, then mygitnexus"
+# mygitnexus-web goes before mygitnexus. The mygitnexus `prepare` script runs
+# scripts/build.js, which compiles mygitnexus-web when that directory is present.
+# In the devcontainer the whole workspace is bind-mounted, so mygitnexus-web/ is
+# present when mygitnexus installs. The production Dockerfiles COPY only selected
 # files, so the directory is not present there.
-cd /workspace/gitnexus-web
+cd /workspace/mygitnexus-web
 npm install
-cd /workspace/gitnexus
+cd /workspace/mygitnexus
 npm install
 
 echo "[install-deps] done"

@@ -38,7 +38,7 @@ updates:
 
   # Keep the nested test-image Docker base digest current as well.
   - package-ecosystem: docker
-    directory: /gitnexus
+    directory: /mygitnexus
     schedule:
       interval: weekly
     cooldown:
@@ -51,14 +51,14 @@ updates:
       - dependencies
       - ci
 
-  # Gitnexus npm deps — tree-sitter grammars checked daily so we catch
+  # MyGitNexus npm deps — tree-sitter grammars checked daily so we catch
   # new releases that unblock the tree-sitter 0.25 upgrade ASAP. Grammars
   # are grouped so lockstep bumps produce a single PR. The tree-sitter
   # RUNTIME is pinned — upgrade deliberately via the drift check workflow.
   # See .github/scripts/check-tree-sitter-upgrade-readiness.py for
   # the upgrade readiness tracker.
   - package-ecosystem: npm
-    directory: /gitnexus
+    directory: /mygitnexus
     schedule:
       interval: daily
     cooldown:
@@ -90,9 +90,9 @@ updates:
       # regenerating vendor/tree-sitter-proto/src/parser.c, not on a schedule.
       - dependency-name: tree-sitter-cli
 
-  # gitnexus-web (thin frontend client).
+  # mygitnexus-web (thin frontend client).
   - package-ecosystem: npm
-    directory: /gitnexus-web
+    directory: /mygitnexus-web
     schedule:
       interval: weekly
     cooldown:
@@ -110,7 +110,7 @@ updates:
 
   # Shared types package.
   - package-ecosystem: npm
-    directory: /gitnexus-shared
+    directory: /mygitnexus-shared
     schedule:
       interval: weekly
     cooldown:

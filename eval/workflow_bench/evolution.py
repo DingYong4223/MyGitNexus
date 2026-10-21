@@ -23,15 +23,15 @@ CANDIDATE_ARMS = {
     "candidate_workflow_direct": "workflow_direct",
 }
 CANDIDATE_SKILLS = {
-    "gitnexus-plan",
-    "gitnexus-work",
+    "mygitnexus-plan",
+    "mygitnexus-work",
 }
 # Skills each incumbent arm actually loads in its sessions. An overlay that
 # only touches other skills would never be exercised — the gate would decide
 # from noise — so such overlays are rejected up front.
 ARM_SKILLS = {
-    "workflow": ("gitnexus-plan", "gitnexus-work"),
-    "workflow_direct": ("gitnexus-work",),
+    "workflow": ("mygitnexus-plan", "mygitnexus-work"),
+    "workflow_direct": ("mygitnexus-work",),
 }
 # Repo-local prompts whose bytes are evidence for each executed arm. Keep this
 # distinct from ``ARM_SKILLS``: that mapping defines which skills a promotable
@@ -39,7 +39,7 @@ ARM_SKILLS = {
 # review evaluation from task setup and review-phase prompt replacement.
 EVALUATED_ARM_SKILLS = {
     **ARM_SKILLS,
-    "review": ("gitnexus-review",),
+    "review": ("mygitnexus-review",),
 }
 PROMOTION_METRICS = ("output_tokens", "cost_usd", "duration_s", "num_turns")
 # Token/turn metrics come from the CLI's top-level `usage`, which counts ONLY
@@ -325,7 +325,7 @@ def candidate_overlay_files(overlay: Path) -> list[Path]:
         ):
             raise ValueError(
                 "candidate overlays may only contain Markdown files under "
-                ".claude/skills/gitnexus-{plan,work}: "
+                ".claude/skills/mygitnexus-{plan,work}: "
                 f"{relative}"
             )
     return entries
@@ -341,9 +341,9 @@ def required_candidate_arms(overlay: Path) -> list[str]:
     overlay = overlay.expanduser().absolute()
     touched = {path.relative_to(overlay).parts[2] for path in candidate_overlay_files(overlay)}
     required: list[str] = []
-    if "gitnexus-plan" in touched or "gitnexus-work" in touched:
+    if "mygitnexus-plan" in touched or "mygitnexus-work" in touched:
         required.append("candidate_workflow")
-    if "gitnexus-work" in touched:
+    if "mygitnexus-work" in touched:
         required.append("candidate_workflow_direct")
     return required
 
@@ -427,7 +427,7 @@ def apply_candidate_overlay(
 def unexercised_overlay_skills(overlay: Path, candidate_arms: list[str]) -> list[str]:
     """Overlay skills that no selected candidate arm would ever load.
 
-    A gitnexus-lfg-only (or gitnexus-review-only) overlay paired with the
+    A mygitnexus-lfg-only (or mygitnexus-review-only) overlay paired with the
     workflow arms is never read by any benchmarked session, so any promotion
     decision about it would be noise.
     """

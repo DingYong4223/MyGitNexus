@@ -117,7 +117,7 @@ if (require.main === module) {
         });
         console.error('');
         console.error('='.repeat(70));
-        console.error(' GitNexus devcontainer one-time Windows setup');
+        console.error(' MyGitNexus devcontainer one-time Windows setup');
         console.error('='.repeat(70));
         console.error('');
         console.error(`HOME has been set to %USERPROFILE% (${userprofile}).`);

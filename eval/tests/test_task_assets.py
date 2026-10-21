@@ -421,7 +421,7 @@ def test_node_modules_dependency_snapshot_captures_the_vite_temp_mount_point(tmp
     repo, _ = _repo_and_task(tmp_path, {"dependency/package.json": b'{"version":1}'})
     task = {
         "sandbox_copy": [],
-        "sandbox_dependencies": [{"source": "dependency", "target": "gitnexus/node_modules"}],
+        "sandbox_dependencies": [{"source": "dependency", "target": "mygitnexus/node_modules"}],
     }
     with TaskAssetCache(tmp_path / "cache") as cache:
         snapshot = cache.prepare(task, repo=repo, resolved_sha=SHA)

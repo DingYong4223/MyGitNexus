@@ -19,7 +19,7 @@ name: Vendored grammar update monitor
 # tree-sitter-upgrade-readiness.yml both read, so the two workflows can never
 # disagree about which grammars are vendored (#858). This monitor additionally
 # resolves each grammar's upstream from it; the readiness report reads vendored
-# ABIs from gitnexus/vendor/ and keeps its own upstream-drift coords.
+# ABIs from mygitnexus/vendor/ and keeps its own upstream-drift coords.
 #
 # Concurrency convention: see CONTRIBUTING.md -> "GitHub Actions — Concurrency Convention".
 
@@ -86,8 +86,8 @@ jobs:
             const hasApp = process.env.HAS_APP === 'true';
             const applied = [], held = [], errors = [], skipped = [];
 
-            run('git', ['config', 'user.name', 'gitnexus-release-bot[bot]']);
-            run('git', ['config', 'user.email', 'gitnexus-release-bot[bot]@users.noreply.github.com']);
+            run('git', ['config', 'user.name', 'mygitnexus-release-bot[bot]']);
+            run('git', ['config', 'user.email', 'mygitnexus-release-bot[bot]@users.noreply.github.com']);
             const baseSha = run('git', ['rev-parse', 'HEAD']).trim();
 
             for (const r of report) {
@@ -107,26 +107,26 @@ jobs:
                 run('node', [SCRIPT, '--apply', r.grammar]);
               } catch (e) {
                 errors.push({ ...r, error: `apply failed: ${String(e.message || e).slice(0, 200)}` });
-                run('git', ['checkout', '--', 'gitnexus/vendor']);
+                run('git', ['checkout', '--', 'mygitnexus/vendor']);
                 continue;
               }
 
               if (!hasApp) {
                 skipped.push({ ...r, reason: 'no RELEASE_APP secret — PR not opened' });
-                run('git', ['checkout', '--', 'gitnexus/vendor']);
+                run('git', ['checkout', '--', 'mygitnexus/vendor']);
                 continue;
               }
 
               const remote = `https://x-access-token:${process.env.GH_TOKEN}@github.com/${owner}/${repo}.git`;
               run('git', ['checkout', '-B', branch, baseSha]);
-              run('git', ['add', `gitnexus/vendor/${name}`]);
+              run('git', ['add', `mygitnexus/vendor/${name}`]);
               run('git', ['commit', '-m', `chore(vendor): update ${name} to ${r.upstream}`]);
               run('git', ['push', '--force-with-lease', remote, `HEAD:${branch}`]);
               const body = [
                 `Automated re-vendor of **${name}** to \`${r.upstream}\` (from ${r.kind === 'npm' ? `npm \`${name}\`` : `\`${r.ref}\``}).`,
                 '',
                 `Verified ABI **${r.abi}** — compatible with the pinned \`tree-sitter@0.21.1\` (13–14).`,
-                'Source-build inputs refreshed; the GitNexus binding.gyp / README / prebuilds are preserved.',
+                'Source-build inputs refreshed; the MyGitNexus binding.gyp / README / prebuilds are preserved.',
                 'The version bump triggers `build-tree-sitter-prebuilds.yml` to rebuild + ABI-validate the',
                 'prebuilds — review its result before merging.',
               ].join('\n');

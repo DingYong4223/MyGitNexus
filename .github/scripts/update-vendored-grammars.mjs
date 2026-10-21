@@ -34,7 +34,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const VENDOR = path.join(REPO_ROOT, 'gitnexus', 'vendor');
+const VENDOR = path.join(REPO_ROOT, 'mygitnexus', 'vendor');
 
 const COMPATIBLE_ABI = new Set([13, 14]); // tree-sitter@0.21.1 LANGUAGE_VERSION range
 
@@ -67,7 +67,7 @@ function loadManifestGrammars(raw = null) {
     Object.entries(raw.grammars || {}).map(([key, g]) => {
       if (!g.name)
         throw new Error(`manifest entry '${key}' is missing a 'name' field (${MANIFEST})`);
-      // Defense-in-depth: `name` is joined into gitnexus/vendor/<name> paths (and
+      // Defense-in-depth: `name` is joined into mygitnexus/vendor/<name> paths (and
       // apply() WRITES there), so reject anything that isn't a plain grammar name
       // before it can traverse the filesystem (#2187).
       if (!/^tree-sitter-[a-z0-9-]+$/.test(g.name))
@@ -249,14 +249,14 @@ const copyFile = (srcRoot, dest, rel) => {
 /**
  * Re-vendor one grammar in place from its ABI-compatible upstream candidate.
  * Copies ONLY the generated source-build + runtime files; deliberately KEEPS the
- * GitNexus-hardened binding.gyp (Windows cflags, target_name), README (vendor
+ * MyGitNexus-hardened binding.gyp (Windows cflags, target_name), README (vendor
  * notice), LICENSE, and prebuilds/ (the build workflow refreshes those). Bumps the
  * stripped vendor package.json version + provenance — never re-introduces
  * scripts/dependencies (#836/#1728). Returns the new version.
  *
  * opts.dryRun resolves + ABI-validates the candidate but writes NOTHING — it logs
  * what it would re-vendor and returns the version, so the flow can be rehearsed
- * (locally or in CI) without mutating gitnexus/vendor/. opts.deps injects the
+ * (locally or in CI) without mutating mygitnexus/vendor/. opts.deps injects the
  * network/fs seams for offline testing (same shape as detect()).
  */
 function apply(key, opts = {}) {
@@ -318,9 +318,9 @@ function apply(key, opts = {}) {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   pkg.version = up.version;
   pkg._vendoredBy =
-    `gitnexus - re-vendored from ${g.npm ? `npm ${g.npm}@${up.version}` : `${g.github}@${up.ref}`} ` +
+    `mygitnexus - re-vendored from ${g.npm ? `npm ${g.npm}@${up.version}` : `${g.github}@${up.ref}`} ` +
     `by grammar-update-monitor on ABI ${abi}. Source-build inputs (parser.c/scanner.c/src/) refreshed; ` +
-    `the GitNexus-hardened binding.gyp + vendor README + prebuilds are preserved (prebuilds are ` +
+    `the MyGitNexus-hardened binding.gyp + vendor README + prebuilds are preserved (prebuilds are ` +
     `rebuilt by build-tree-sitter-prebuilds.yml on this version change). No scripts/dependencies here ` +
     `(#836/#1728).`;
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');

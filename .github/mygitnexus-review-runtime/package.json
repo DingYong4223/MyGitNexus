@@ -1,0 +1,14 @@
+{
+  "name": "mygitnexus-review-runtime",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": "22.18.0"
+  },
+  "dependencies": {
+    "mygitnexus": "1.6.9"
+  },
+  "overrides": {
+    "adm-zip": "0.6.0"
+  }
+}

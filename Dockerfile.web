@@ -1,7 +1,7 @@
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 # Pinned npm version — keep in sync with Dockerfile.cli and
-# gitnexus/Dockerfile.test.
+# mygitnexus/Dockerfile.test.
 ARG NPM_VERSION=11.14.1
 
 # node:22-bookworm-slim
@@ -12,19 +12,19 @@ WORKDIR /app
 
 RUN npx --yes npm@${NPM_VERSION} install -g npm@${NPM_VERSION}
 
-COPY gitnexus-shared/package.json gitnexus-shared/package-lock.json ./gitnexus-shared/
-RUN npm ci --prefix gitnexus-shared
+COPY mygitnexus-shared/package.json mygitnexus-shared/package-lock.json ./mygitnexus-shared/
+RUN npm ci --prefix mygitnexus-shared
 
-COPY gitnexus-shared ./gitnexus-shared
-RUN npm run build --prefix gitnexus-shared
+COPY mygitnexus-shared ./mygitnexus-shared
+RUN npm run build --prefix mygitnexus-shared
 
-COPY gitnexus/package.json ./gitnexus/
+COPY mygitnexus/package.json ./mygitnexus/
 
-COPY gitnexus-web/package.json gitnexus-web/package-lock.json ./gitnexus-web/
-RUN npm ci --prefix gitnexus-web
+COPY mygitnexus-web/package.json mygitnexus-web/package-lock.json ./mygitnexus-web/
+RUN npm ci --prefix mygitnexus-web
 
-COPY gitnexus-web ./gitnexus-web
-RUN npm run build --prefix gitnexus-web
+COPY mygitnexus-web ./mygitnexus-web
+RUN npm run build --prefix mygitnexus-web
 
 # node:22-bookworm-slim
 FROM node:22-bookworm-slim@sha256:9f6d5975c7dca860947d3915877f85607946403fc55349f39b4bc3688448bb6e AS runtime
@@ -36,7 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 
 WORKDIR /app
 
-COPY --from=builder /app/gitnexus-web/dist ./dist
+COPY --from=builder /app/mygitnexus-web/dist ./dist
 COPY docker-server.mjs ./docker-server.mjs
 
 RUN chown -R node:node /app

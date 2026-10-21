@@ -2,20 +2,20 @@
 alwaysApply: true
 ---
 
-# GitNexus — Cursor project rules
+# MyGitNexus — Cursor project rules
 
 Last reviewed: 2026-03-24
 
-Canonical agent instructions: **[AGENTS.md](../AGENTS.md)** (GitNexus MCP rules, monorepo commands, Cursor Cloud notes). **[CLAUDE.md](../CLAUDE.md)** adds Claude Code-specific notes and points back to AGENTS.md for GitNexus.
+Canonical agent instructions: **[AGENTS.md](../AGENTS.md)** (MyGitNexus MCP rules, monorepo commands, Cursor Cloud notes). **[CLAUDE.md](../CLAUDE.md)** adds Claude Code-specific notes and points back to AGENTS.md for MyGitNexus.
 
 ## Non-negotiables (always apply)
 
-- NEVER edit a function/class/method without running `gitnexus_impact` first.
-- NEVER rename symbols with find-and-replace — use `gitnexus_rename`.
-- NEVER commit without running `gitnexus_detect_changes()`.
+- NEVER edit a function/class/method without running `mygitnexus_impact` first.
+- NEVER rename symbols with find-and-replace — use `mygitnexus_rename`.
+- NEVER commit without running `mygitnexus_detect_changes()`.
 - NEVER ignore HIGH/CRITICAL risk warnings from impact analysis.
-- NEVER run `npx gitnexus analyze` without `--embeddings` if the index metadata (`.gitnexus/gitnexus.json` / legacy `meta.json`) shows stored embeddings.
+- NEVER run `npx mygitnexus analyze` without `--embeddings` if the index metadata (`.mygitnexus/mygitnexus.json` / legacy `meta.json`) shows stored embeddings.
 
-Full rules: **[AGENTS.md](../AGENTS.md)** (`gitnexus:start` block, Cursor Cloud section).
+Full rules: **[AGENTS.md](../AGENTS.md)** (`mygitnexus:start` block, Cursor Cloud section).
 
 **Rule architecture:** Prefer this file plus optional `.cursor/rules/*.mdc` globs (YAML `globs` in frontmatter). Legacy `.cursorrules` is deprecated; content lives here.

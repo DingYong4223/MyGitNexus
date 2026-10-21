@@ -1,10 +1,10 @@
-# Scenario suite for the gitnexus workflow benchmark — the ground-base matrix.
+# Scenario suite for the mygitnexus workflow benchmark — the ground-base matrix.
 #
 # Task fields:
 #   id:      short slug used in reports
 #   class:   task class for cost/quality routing analysis. The suite spans:
 #            trivial → investigation-bug → investigation-feature → cross-module
-#   repo:    path to a git repo that is GitNexus-indexed
+#   repo:    path to a git repo that is MyGitNexus-indexed
 #   ref:     git ref benchmarked (fresh detached worktree per arm per run)
 #   setup:   optional shell command run in the fresh worktree first
 #            (task-specific preparation; dependencies are immutable mounts)
@@ -24,9 +24,9 @@
 # boundary where each mode pays for itself — that boundary is the routing rule
 # lfg's gate and work's direct-mode triage encode.
 #
-# GitNexus scenarios build one graph from a history-pruned, parentless clone and
+# MyGitNexus scenarios build one graph from a history-pruned, parentless clone and
 # cache only that sanitized graph for every arm. The target repository's
-# prebuilt .gitnexus directory is never copied. Three declared dependency trees
+# prebuilt .mygitnexus directory is never copied. Three declared dependency trees
 # are mounted read-only; missing assets fail before model execution.
 
 tasks:
@@ -35,25 +35,25 @@ tasks:
   # the overhead floor stay visible.
   - id: trivial-version-alias
     class: trivial
-    repo: ~/GitNexus
+    repo: ~/MyGitNexus
     ref: main
-    sandbox_dependencies: &gitnexus_sandbox_dependencies
+    sandbox_dependencies: &mygitnexus_sandbox_dependencies
       - source: node_modules
         target: node_modules
-      - source: gitnexus/node_modules
-        target: gitnexus/node_modules
-      - source: gitnexus-shared/node_modules
-        target: gitnexus-shared/node_modules
+      - source: mygitnexus/node_modules
+        target: mygitnexus/node_modules
+      - source: mygitnexus-shared/node_modules
+        target: mygitnexus-shared/node_modules
     prompt: >
-      Add -V as a short alias for --version to the gitnexus CLI
-      (gitnexus/src/cli/index.ts), and cover the alias with a unit test in
-      gitnexus/test/unit/cli-commands.test.ts.
-    verify: cd gitnexus && npx tsc --noEmit && npx vitest run test/unit/cli-commands.test.ts
+      Add -V as a short alias for --version to the mygitnexus CLI
+      (mygitnexus/src/cli/index.ts), and cover the alias with a unit test in
+      mygitnexus/test/unit/cli-commands.test.ts.
+    verify: cd mygitnexus && npx tsc --noEmit && npx vitest run test/unit/cli-commands.test.ts
     oracle:
       command: >-
-        cd gitnexus && ./node_modules/.bin/vitest run
-        --config "$GITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"
-        "$GITNEXUS_BENCH_ORACLE_ROOT/trivial-version-alias.oracle.test.ts"
+        cd mygitnexus && ./node_modules/.bin/vitest run
+        --config "$MYGITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"
+        "$MYGITNEXUS_BENCH_ORACLE_ROOT/trivial-version-alias.oracle.test.ts"
       files:
         - source: vitest.config.mts
           target: vitest.config.mts
@@ -65,21 +65,21 @@ tasks:
   # message without breaking existing consumers.
   - id: inv-bug-pdg-note
     class: investigation-bug
-    repo: ~/GitNexus
+    repo: ~/MyGitNexus
     ref: main
-    sandbox_dependencies: *gitnexus_sandbox_dependencies
+    sandbox_dependencies: *mygitnexus_sandbox_dependencies
     prompt: >
       When the pdg_query MCP tool returns its "no PDG layer" note, make the
       note say WHICH sub-layer is missing (CDG vs REACHING_DEF) instead of a
       generic message, keeping the existing degraded-result contract intact.
       Cover both modes with unit tests in
-      gitnexus/test/unit/pdg-note-sublayer.test.ts.
-    verify: cd gitnexus && npx tsc --noEmit && npx vitest run test/unit/pdg-note-sublayer.test.ts
+      mygitnexus/test/unit/pdg-note-sublayer.test.ts.
+    verify: cd mygitnexus && npx tsc --noEmit && npx vitest run test/unit/pdg-note-sublayer.test.ts
     oracle:
       command: >-
-        cd gitnexus && ./node_modules/.bin/vitest run
-        --config "$GITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"
-        "$GITNEXUS_BENCH_ORACLE_ROOT/inv-bug-pdg-note.oracle.test.ts"
+        cd mygitnexus && ./node_modules/.bin/vitest run
+        --config "$MYGITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"
+        "$MYGITNEXUS_BENCH_ORACLE_ROOT/inv-bug-pdg-note.oracle.test.ts"
       files:
         - source: vitest.config.mts
           target: vitest.config.mts
@@ -90,21 +90,21 @@ tasks:
   # pagination totals — three seams that must stay consistent.
   - id: inv-feature-list-repos-filter
     class: investigation-feature
-    repo: ~/GitNexus
+    repo: ~/MyGitNexus
     ref: main
-    sandbox_dependencies: *gitnexus_sandbox_dependencies
+    sandbox_dependencies: *mygitnexus_sandbox_dependencies
     prompt: >
       Add an optional "name_contains" filter parameter to the list_repos MCP
       tool: case-insensitive substring match on the repo name, with the
       pagination object (total/hasMore/nextOffset) reflecting the FILTERED
       set. Cover with unit tests in
-      gitnexus/test/unit/list-repos-name-filter.test.ts.
-    verify: cd gitnexus && npx tsc --noEmit && npx vitest run test/unit/list-repos-name-filter.test.ts
+      mygitnexus/test/unit/list-repos-name-filter.test.ts.
+    verify: cd mygitnexus && npx tsc --noEmit && npx vitest run test/unit/list-repos-name-filter.test.ts
     oracle:
       command: >-
-        cd gitnexus && ./node_modules/.bin/vitest run
-        --config "$GITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"
-        "$GITNEXUS_BENCH_ORACLE_ROOT/inv-feature-list-repos-filter.oracle.test.ts"
+        cd mygitnexus && ./node_modules/.bin/vitest run
+        --config "$MYGITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"
+        "$MYGITNEXUS_BENCH_ORACLE_ROOT/inv-feature-list-repos-filter.oracle.test.ts"
       files:
         - source: vitest.config.mts
           target: vitest.config.mts
@@ -116,21 +116,21 @@ tasks:
   - id: cross-module-parse-retry
     class: cross-module
     expensive: true
-    repo: ~/GitNexus
+    repo: ~/MyGitNexus
     ref: main
-    sandbox_dependencies: *gitnexus_sandbox_dependencies
+    sandbox_dependencies: *mygitnexus_sandbox_dependencies
     prompt: >
       Add bounded retry with backoff to the ingestion pipeline so a transient
       parse-worker failure on a file is retried up to 2 times before the file
       is marked failed, without retrying deterministic parse errors. Cover
       the retry/no-retry decision with unit tests in
-      gitnexus/test/unit/parse-retry.test.ts.
-    verify: cd gitnexus && npx tsc --noEmit && npx vitest run test/unit/parse-retry.test.ts
+      mygitnexus/test/unit/parse-retry.test.ts.
+    verify: cd mygitnexus && npx tsc --noEmit && npx vitest run test/unit/parse-retry.test.ts
     oracle:
       command: >-
-        cd gitnexus && ./node_modules/.bin/vitest run
-        --config "$GITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"
-        "$GITNEXUS_BENCH_ORACLE_ROOT/cross-module-parse-retry.oracle.test.ts"
+        cd mygitnexus && ./node_modules/.bin/vitest run
+        --config "$MYGITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"
+        "$MYGITNEXUS_BENCH_ORACLE_ROOT/cross-module-parse-retry.oracle.test.ts"
       files:
         - source: vitest.config.mts
           target: vitest.config.mts

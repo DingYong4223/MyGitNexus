@@ -24,12 +24,12 @@ import urllib.parse
 import urllib.request
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
-GITNEXUS_DIR = REPO_ROOT / "gitnexus"
+MYGITNEXUS_DIR = REPO_ROOT / "mygitnexus"
 
-# Offline mode (--offline flag or GITNEXUS_TS_READINESS_OFFLINE=1): skip ALL network
+# Offline mode (--offline flag or MYGITNEXUS_TS_READINESS_OFFLINE=1): skip ALL network
 # so the script + tests run hermetically. npm columns render "n/a (offline)";
 # vendored ABIs are still read from the repo. The read-path mirror of --assert-current.
-OFFLINE = os.environ.get("GITNEXUS_TS_READINESS_OFFLINE", "") not in ("", "0", "false")
+OFFLINE = os.environ.get("MYGITNEXUS_TS_READINESS_OFFLINE", "") not in ("", "0", "false")
 
 # ── Upgrade target ──────────────────────────────────────────────────────
 # The runtime version we want to upgrade TO. Update this when the goal
@@ -88,7 +88,7 @@ def load_vendored_manifest() -> dict[str, dict]:
     """Load the shared vendored-grammar manifest (.github/vendored-grammars.json).
 
     The single source of truth — shared with update-vendored-grammars.mjs — for
-    which grammars are *vendored* (shipped from gitnexus/vendor/<name>, not npm)
+    which grammars are *vendored* (shipped from mygitnexus/vendor/<name>, not npm)
     and any policy ``hold`` (e.g. tree-sitter-c, #1242/#858). Membership routes a
     grammar to the vendored branch, which reads its ABI from the repo instead of
     node_modules (the #858 source of the old bare ``?``). Returns
@@ -118,7 +118,7 @@ def load_vendored_manifest() -> dict[str, dict]:
                 f"vendored-grammars manifest entry {key!r} is missing a 'name' field "
                 f"({manifest_path})."
             )
-        # Defense-in-depth (#2187): `name` is joined into gitnexus/vendor/<name>, so
+        # Defense-in-depth (#2187): `name` is joined into mygitnexus/vendor/<name>, so
         # reject anything not a plain grammar name before it can traverse ("../etc").
         if not re.fullmatch(r"tree-sitter-[a-z0-9-]+", name):
             raise SystemExit(
@@ -137,7 +137,7 @@ VENDORED_NAMES: frozenset[str] = frozenset(VENDORED)
 # ── Helpers ─────────────────────────────────────────────────────────────
 
 def _load_package_json() -> dict:
-    return json.loads((GITNEXUS_DIR / "package.json").read_text())
+    return json.loads((MYGITNEXUS_DIR / "package.json").read_text())
 
 
 def read_current_runtime() -> str:
@@ -151,7 +151,7 @@ def read_current_runtime() -> str:
 
 
 def read_pinned_grammar_versions() -> dict[str, str]:
-    """Return the grammar version range pinned in gitnexus/package.json.
+    """Return the grammar version range pinned in mygitnexus/package.json.
 
     Looks at both runtime and optional dependencies. Returns the raw range
     string (e.g. '0.21.4', '^0.23.0', 'file:./vendor/...') so the report can
@@ -322,13 +322,13 @@ def range_includes(spec: str | None, version: str) -> bool:
 
 
 def vendored_abi_from_repo(name: str, parser_path: str) -> int | None:
-    """Read a vendored grammar's ABI directly from gitnexus/vendor/<name>.
+    """Read a vendored grammar's ABI directly from mygitnexus/vendor/<name>.
 
     Local-only (no network) — the offline half of ``vendored_drift_summary``,
     factored out so the hermetic ``--assert-current`` gate can introspect vendored
     ABIs without triggering the upstream-drift fetches it never uses (#858 review).
     """
-    vendor_dir = GITNEXUS_DIR / "vendor" / name
+    vendor_dir = MYGITNEXUS_DIR / "vendor" / name
     vendored_parser = vendor_dir / parser_path
     if not vendored_parser.is_file():
         vendored_parser = vendor_dir / "src" / "parser.c"
@@ -338,11 +338,11 @@ def vendored_abi_from_repo(name: str, parser_path: str) -> int | None:
 def vendored_drift_summary(
     name: str, upstream_repo: str, upstream_branch: str, parser_path: str
 ) -> dict:
-    """Inspect a vendored grammar under gitnexus/vendor/<name>: returns its
+    """Inspect a vendored grammar under mygitnexus/vendor/<name>: returns its
     package.json ``version`` + ``_vendoredBy`` (the rationale, kept next to the
     sources), the vendored ABI, and a comparison against upstream main.
     """
-    vendor_dir = GITNEXUS_DIR / "vendor" / name
+    vendor_dir = MYGITNEXUS_DIR / "vendor" / name
     pkg: dict = {}
     pkg_path = vendor_dir / "package.json"
     if pkg_path.is_file():
@@ -409,7 +409,7 @@ def assert_current() -> int:
 
     The hermetic/offline static half of the #1922 ABI gate (the runtime
     load-smoke is the dynamic half): reads only local files — npm ABIs from
-    node_modules/<name>, vendored ABIs from gitnexus/vendor/<name> via
+    node_modules/<name>, vendored ABIs from mygitnexus/vendor/<name> via
     ``vendored_abi_from_repo`` (no network). A prebuilt-only vendor (no
     parser.c) is skipped; INTENTIONAL_PINS are asserted like any other grammar.
     Returns 0 when every introspectable grammar is in range, 1 otherwise.
@@ -465,9 +465,9 @@ def assert_current() -> int:
                 failures.append(msg)
             continue
 
-        installed_parser = GITNEXUS_DIR / "node_modules" / name / parser_path
+        installed_parser = MYGITNEXUS_DIR / "node_modules" / name / parser_path
         if not installed_parser.is_file():
-            installed_parser = GITNEXUS_DIR / "node_modules" / name / "src" / "parser.c"
+            installed_parser = MYGITNEXUS_DIR / "node_modules" / name / "src" / "parser.c"
         abi = extract_language_version(installed_parser)
         if abi is None:
             skipped.append(f"{name} (not installed / no parser.c — covered by load-smoke)")
@@ -573,7 +573,7 @@ def _render_vendored_section(
     # inside a list display trips CodeQL py/implicit-string-concatenation-in-list
     # (it reads as a possibly-missing comma between elements).
     intro = (
-        "These grammars ship from `gitnexus/vendor/` rather than the npm "
+        "These grammars ship from `mygitnexus/vendor/` rather than the npm "
         "registry. Their compatibility is governed by the **vendored "
         "ABI** (must lie in the target runtime's range), not by a peer-"
         "dep negotiation. The rationale for each vendored copy lives in "
@@ -651,7 +651,7 @@ def main() -> int:
         lines.append(
             "> **Offline mode** — npm registry + upstream GitHub checks were skipped. "
             "npm-installed grammars show as unverified; vendored-grammar ABIs are read "
-            "from `gitnexus/vendor/`."
+            "from `mygitnexus/vendor/`."
         )
         lines.append("")
 
@@ -769,10 +769,10 @@ def main() -> int:
             current_compat = satisfies_target(peer_range, f"{current_runtime}.0")
 
         # Check installed ABI using the same parser_path from GRAMMARS.
-        installed_parser = GITNEXUS_DIR / "node_modules" / name / parser_path
+        installed_parser = MYGITNEXUS_DIR / "node_modules" / name / parser_path
         if not installed_parser.is_file():
             # Fallback to default location.
-            installed_parser = GITNEXUS_DIR / "node_modules" / name / "src" / "parser.c"
+            installed_parser = MYGITNEXUS_DIR / "node_modules" / name / "src" / "parser.c"
         installed_abi = extract_language_version(installed_parser)
         # Labeled sentinel, never a bare "?": CI's `npm ci` populates node_modules,
         # but if it's absent say so plainly rather than leaving a placeholder (#858).

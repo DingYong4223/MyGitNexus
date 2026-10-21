@@ -12,7 +12,7 @@ on:
     paths:
       - 'Dockerfile.cli'
       - 'Dockerfile.web'
-      - 'gitnexus/Dockerfile.test'
+      - 'mygitnexus/Dockerfile.test'
       - '.github/workflows/trivy.yml'
   push:
     branches: [main]
@@ -40,8 +40,8 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - { dockerfile: Dockerfile.cli, name: gitnexus-cli }
-          - { dockerfile: Dockerfile.web, name: gitnexus-web }
+          - { dockerfile: Dockerfile.cli, name: mygitnexus-cli }
+          - { dockerfile: Dockerfile.web, name: mygitnexus-web }
 
     steps:
       - name: Checkout

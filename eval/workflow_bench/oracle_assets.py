@@ -22,7 +22,7 @@ MAX_ORACLE_FILE_BYTES = 512 * 1024
 MAX_ORACLE_TOTAL_BYTES = 2 * 1024 * 1024
 MAX_ORACLE_PATH_BYTES = 240
 MAX_ORACLE_COMMAND_BYTES = 8 * 1024
-ORACLE_ENV_VAR = "GITNEXUS_BENCH_ORACLE_ROOT"
+ORACLE_ENV_VAR = "MYGITNEXUS_BENCH_ORACLE_ROOT"
 HIDDEN_HARNESS_PATH = PurePosixPath("eval/workflow_bench")
 MAX_CLONE_REFS = 1024
 MAX_CLONE_REF_BYTES = 2 * 1024 * 1024
@@ -334,7 +334,7 @@ def sanitize_clone_for_hidden_oracles(clone: Path) -> str:
         root,
         [
             "-c",
-            "user.name=GitNexus Workflow Benchmark",
+            "user.name=MyGitNexus Workflow Benchmark",
             "-c",
             "user.email=workflow-bench.invalid",
             "-c",

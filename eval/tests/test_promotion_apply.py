@@ -44,21 +44,21 @@ def test_evolve_reexports_public_promotion_helpers():
 
 
 def test_mirror_targets_cover_canonical_and_shipped_copies():
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     assert targets == [
-        PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"),
-        PurePosixPath("gitnexus/skills/gitnexus-plan/SKILL.md"),
-        PurePosixPath("gitnexus-claude-plugin/skills/gitnexus-plan/SKILL.md"),
+        PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"),
+        PurePosixPath("mygitnexus/skills/mygitnexus-plan/SKILL.md"),
+        PurePosixPath("mygitnexus-claude-plugin/skills/mygitnexus-plan/SKILL.md"),
     ]
 
 
 def test_apply_promoted_overlay_writes_all_mirrors(tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("evolved plan skill")
     repo = tmp_path / "repo"
-    expected_targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    expected_targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in expected_targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -67,9 +67,9 @@ def test_apply_promoted_overlay_writes_all_mirrors(tmp_path):
     written = apply_promoted_overlay(overlay, repo_root=repo)
 
     assert written == [
-        ".claude/skills/gitnexus-plan/SKILL.md",
-        "gitnexus/skills/gitnexus-plan/SKILL.md",
-        "gitnexus-claude-plugin/skills/gitnexus-plan/SKILL.md",
+        ".claude/skills/mygitnexus-plan/SKILL.md",
+        "mygitnexus/skills/mygitnexus-plan/SKILL.md",
+        "mygitnexus-claude-plugin/skills/mygitnexus-plan/SKILL.md",
     ]
     contents = {(repo / path).read_text() for path in written}
     assert contents == {"evolved plan skill"}
@@ -77,11 +77,11 @@ def test_apply_promoted_overlay_writes_all_mirrors(tmp_path):
 
 def test_apply_promoted_overlay_rejects_destination_drift(tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -90,7 +90,7 @@ def test_apply_promoted_overlay_rejects_destination_drift(tmp_path):
     drifted = repo / targets[1]
     drifted.write_text("concurrent edit")
 
-    with pytest.raises(ValueError, match="drifted=.*gitnexus-plan/SKILL.md"):
+    with pytest.raises(ValueError, match="drifted=.*mygitnexus-plan/SKILL.md"):
         apply_promoted_overlay(
             overlay,
             repo_root=repo,
@@ -104,11 +104,11 @@ def test_apply_promoted_overlay_rejects_destination_drift(tmp_path):
 
 def test_apply_promoted_overlay_preserves_edit_racing_atomic_exchange(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -136,11 +136,11 @@ def test_apply_promoted_overlay_preserves_edit_racing_atomic_exchange(monkeypatc
 
 def test_apply_promoted_overlay_rolls_back_raced_edit_when_exchange_then_raises(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -169,11 +169,11 @@ def test_apply_promoted_overlay_rolls_back_raced_edit_when_exchange_then_raises(
 
 def test_apply_promoted_overlay_preserves_second_edit_racing_rollback(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -206,11 +206,11 @@ def test_apply_promoted_overlay_preserves_second_edit_racing_rollback(monkeypatc
 
 def test_apply_promoted_overlay_preserves_mode_change_racing_exchange(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -238,11 +238,11 @@ def test_apply_promoted_overlay_preserves_mode_change_racing_exchange(monkeypatc
 
 def test_apply_promoted_overlay_treats_candidate_hardlinked_at_both_names_as_incomplete(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -280,11 +280,11 @@ def test_apply_promoted_overlay_treats_candidate_hardlinked_at_both_names_as_inc
 
 def test_apply_promoted_overlay_rolls_back_every_completed_replace(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -310,11 +310,11 @@ def test_apply_promoted_overlay_rolls_back_every_completed_replace(monkeypatch, 
 
 def test_apply_promoted_overlay_rolls_back_when_replace_lands_then_interrupts(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -347,11 +347,11 @@ def test_apply_promoted_overlay_rolls_back_when_replace_lands_then_interrupts(mo
 
 def test_apply_promoted_overlay_prevalidates_all_targets_before_staging(tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    first = repo / mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))[0]
+    first = repo / mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))[0]
     first.parent.mkdir(parents=True)
     first.write_text("incumbent")
 
@@ -364,11 +364,11 @@ def test_apply_promoted_overlay_prevalidates_all_targets_before_staging(tmp_path
 
 def test_apply_promoted_overlay_rejects_internal_symlink_ancestor(tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in (targets[0], targets[2]):
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -389,12 +389,12 @@ def test_apply_promoted_overlay_rejects_internal_symlink_ancestor(tmp_path):
 
 def test_apply_promoted_overlay_rejects_repository_swap_during_root_open(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
     replacement_repo = tmp_path / "replacement-repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for root, content in ((repo, "incumbent"), (replacement_repo, "replacement")):
         for target in targets:
             destination = root / target
@@ -424,18 +424,18 @@ def test_apply_promoted_overlay_rejects_repository_swap_during_root_open(monkeyp
 
 def test_apply_promoted_overlay_rejects_detached_parent_after_preparation(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text("incumbent")
 
     lexical_parent = (repo / targets[0]).parent
-    detached_parent = lexical_parent.with_name("gitnexus-plan-detached")
+    detached_parent = lexical_parent.with_name("mygitnexus-plan-detached")
     real_stage = promotion_apply._stage_replacement_at
     replaced = False
 
@@ -462,7 +462,7 @@ def test_apply_promoted_overlay_rejects_detached_parent_after_preparation(monkey
 
 def test_committed_destination_bases_ignore_and_reject_live_target_edits(tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
@@ -470,7 +470,7 @@ def test_committed_destination_bases_ignore_and_reject_live_target_edits(tmp_pat
     _git(repo, "init", "-b", "main")
     _git(repo, "config", "user.name", "Workflow Bench Test")
     _git(repo, "config", "user.email", "workflow-bench@example.invalid")
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -496,12 +496,12 @@ def test_mirror_roots_cover_every_candidate_skill_and_omit_none_that_ships_to_cu
     # promotion_apply.mirror_targets writes canonical + MIRROR_SKILL_ROOTS, which
     # today omits the Cursor tree. That is only safe because no candidate skill is
     # cursor-shipped. If a future edit adds a cursor-shipped skill (e.g.
-    # gitnexus-review) to CANDIDATE_SKILLS, apply_promoted_overlay would rewrite
+    # mygitnexus-review) to CANDIDATE_SKILLS, apply_promoted_overlay would rewrite
     # the other trees and silently skip Cursor — the PR #2488 asymmetric-sync bug
     # class. Pin the invariant to the filesystem, the source of truth the TS drift
     # guard already enforces.
     repo_root = Path(__file__).resolve().parents[2]
-    cursor_root = repo_root / "gitnexus-cursor-integration" / "skills"
+    cursor_root = repo_root / "mygitnexus-cursor-integration" / "skills"
     for skill in sorted(CANDIDATE_SKILLS):
         canonical = repo_root / ".claude" / "skills" / skill
         assert canonical.is_dir(), f"candidate skill {skill} has no canonical .claude/skills dir"
@@ -509,7 +509,7 @@ def test_mirror_roots_cover_every_candidate_skill_and_omit_none_that_ships_to_cu
             assert (repo_root / target).is_file(), f"candidate skill mirror missing on disk: {target}"
         assert not (cursor_root / skill).exists(), (
             f"candidate skill {skill} ships to Cursor, but MIRROR_SKILL_ROOTS does not cover "
-            "gitnexus-cursor-integration/skills — promotion would sync it asymmetrically"
+            "mygitnexus-cursor-integration/skills — promotion would sync it asymmetrically"
         )
 
 
@@ -518,7 +518,7 @@ def test_committed_destination_bases_reject_overlay_adding_uncommitted_target(tm
     # against and raises ValueError — evolve.run / runner.main now catch that as
     # NOT PROMOTED / a clean CLI error instead of an uncaught traceback.
     overlay = tmp_path / "overlay"
-    new_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "NEW.md"
+    new_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "NEW.md"
     new_md.parent.mkdir(parents=True)
     new_md.write_text("brand new candidate file")
     repo = tmp_path / "repo"
@@ -549,11 +549,11 @@ def test_stage_replacement_removes_partial_file_when_fsync_fails(monkeypatch, tm
 
 def test_apply_promoted_overlay_names_recovery_state_if_rollback_fails(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -582,12 +582,12 @@ def test_apply_promoted_overlay_names_recovery_state_if_rollback_fails(monkeypat
 
 def test_apply_promoted_overlay_writes_recovery_into_held_root_after_relocation(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
     replacement_repo = tmp_path / "replacement-repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for root, content in ((repo, "incumbent"), (replacement_repo, "replacement")):
         for target in targets:
             destination = root / target
@@ -628,11 +628,11 @@ def test_apply_promoted_overlay_reports_published_state_and_closes_descriptors_o
     tmp_path,
 ):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -667,11 +667,11 @@ def test_apply_promoted_overlay_reports_published_state_and_closes_descriptors_o
 
 def test_apply_promoted_overlay_tracks_candidate_when_backup_staging_and_cleanup_fail(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -708,11 +708,11 @@ def test_apply_promoted_overlay_tracks_candidate_when_backup_staging_and_cleanup
 
 def test_apply_promoted_overlay_tracks_candidate_before_identity_capture(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -738,11 +738,11 @@ def test_apply_promoted_overlay_tracks_candidate_before_identity_capture(monkeyp
 
 def test_apply_promoted_overlay_tracks_stage_name_when_parent_fsync_and_unlink_fail(monkeypatch, tmp_path):
     overlay = tmp_path / "overlay"
-    skill_md = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill_md = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill_md.parent.mkdir(parents=True)
     skill_md.write_text("candidate")
     repo = tmp_path / "repo"
-    targets = mirror_targets(PurePosixPath(".claude/skills/gitnexus-plan/SKILL.md"))
+    targets = mirror_targets(PurePosixPath(".claude/skills/mygitnexus-plan/SKILL.md"))
     for target in targets:
         destination = repo / target
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -781,7 +781,7 @@ def test_apply_promoted_overlay_tracks_stage_name_when_parent_fsync_and_unlink_f
 
 def test_freeze_overlay_detaches_authorized_bytes_from_mutable_input(tmp_path):
     overlay = tmp_path / "overlay"
-    source = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    source = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     source.parent.mkdir(parents=True)
     source.write_text("authorized")
     frozen = tmp_path / "frozen"
@@ -795,7 +795,7 @@ def test_freeze_overlay_detaches_authorized_bytes_from_mutable_input(tmp_path):
 
 def test_freeze_overlay_matches_canonical_payload_digest_and_byte_boundary(tmp_path):
     overlay = tmp_path / "overlay"
-    source = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    source = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     source.parent.mkdir(parents=True)
     source.write_bytes(b"x" * MAX_CANDIDATE_OVERLAY_BYTES)
 

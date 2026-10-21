@@ -1,4 +1,4 @@
-"""Build one reusable GitNexus graph from a history-pruned task snapshot."""
+"""Build one reusable MyGitNexus graph from a history-pruned task snapshot."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from typing import Any
 from .oracle_assets import HIDDEN_HARNESS_PATH, sanitize_clone_for_hidden_oracles
 from .process_control import ManagedProcessError, run_managed
 from .proposer_sandbox import (
-    SANDBOX_GITNEXUS,
+    SANDBOX_MYGITNEXUS,
     SANDBOX_HOME,
     SANDBOX_NODE,
     SANDBOX_WORKSPACE,
@@ -27,14 +27,14 @@ from .runner_artifacts import make_worktree, remove_clone
 from .task_assets import TaskAssetCache, TaskAssetSnapshot
 
 GRAPH_ASSET_PATHS = (
-    ".gitnexus/gitnexus.json",
-    ".gitnexus/meta.json",
-    ".gitnexus/lbug",
+    ".mygitnexus/mygitnexus.json",
+    ".mygitnexus/meta.json",
+    ".mygitnexus/lbug",
 )
 GRAPH_MARKERS = (
     "eval/workflow_bench",
     "workflow_bench/oracles",
-    "GITNEXUS_BENCH_ORACLE_ROOT",
+    "MYGITNEXUS_BENCH_ORACLE_ROOT",
     "tasks.scenarios.yaml",
     ".oracle.test.",
     "wfbench-oracle",
@@ -44,8 +44,8 @@ GRAPH_QUERY_TIMEOUT_SECONDS = 300
 MAX_GRAPH_SCRUB_ENTRIES = 250_000
 MAX_GRAPH_SCRUB_FILE_BYTES = 512 * 1024
 MAX_GRAPH_SCRUB_TOTAL_BYTES = 2 * 1024 * 1024 * 1024
-SANDBOX_GITNEXUS_ENTRYPOINT = f"{SANDBOX_GITNEXUS}/dist/cli/index.js"
-SANDBOX_INDEX_REGISTRY = f"{SANDBOX_HOME}/.gitnexus-index"
+SANDBOX_MYGITNEXUS_ENTRYPOINT = f"{SANDBOX_MYGITNEXUS}/dist/cli/index.js"
+SANDBOX_INDEX_REGISTRY = f"{SANDBOX_HOME}/.mygitnexus-index"
 
 
 @dataclass(frozen=True)
@@ -77,7 +77,7 @@ def _is_restricted_path(value: str) -> bool:
     if relative.is_absolute() or not relative.parts or ".." in relative.parts:
         return False
     return (
-        relative.parts[0] == ".gitnexus" or relative == HIDDEN_HARNESS_PATH or HIDDEN_HARNESS_PATH in relative.parents
+        relative.parts[0] == ".mygitnexus" or relative == HIDDEN_HARNESS_PATH or HIDDEN_HARNESS_PATH in relative.parents
     )
 
 
@@ -131,17 +131,17 @@ def _replace_control_file(root: Path, name: str, payload: bytes) -> None:
 
 
 def _neutralize_target_index_inputs(root: Path) -> None:
-    index = root / ".gitnexus"
+    index = root / ".mygitnexus"
     try:
         metadata = index.lstat()
     except FileNotFoundError:
         metadata = None
     if metadata is not None:
         if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISDIR(metadata.st_mode):
-            raise SandboxError("target .gitnexus path must be a real directory before graph preparation")
+            raise SandboxError("target .mygitnexus path must be a real directory before graph preparation")
         shutil.rmtree(index)
-    _replace_control_file(root, ".gitnexusrc", b"{}\n")
-    _replace_control_file(root, ".gitnexusignore", b"")
+    _replace_control_file(root, ".mygitnexusrc", b"{}\n")
+    _replace_control_file(root, ".mygitnexusignore", b"")
 
 
 def _scrub_source_references(root: Path) -> tuple[str, ...]:
@@ -168,7 +168,7 @@ def _scrub_source_references(root: Path) -> tuple[str, ...]:
             raise SandboxError(f"cannot scan sanitized graph source: {directory}: {exc}") from exc
         for entry in children:
             relative = relative_directory / entry.name
-            if relative.parts[0] in {".git", ".gitnexus"}:
+            if relative.parts[0] in {".git", ".mygitnexus"}:
                 continue
             entries += 1
             if entries > MAX_GRAPH_SCRUB_ENTRIES:
@@ -231,10 +231,10 @@ def _graph_environment() -> dict[str, str]:
     env = build_sandbox_environment()
     env.update(
         {
-            "GITNEXUS_HOME": SANDBOX_INDEX_REGISTRY,
-            "GITNEXUS_NO_GITIGNORE": "1",
-            "GITNEXUS_WORKER_POOL_SIZE": "1",
-            "GITNEXUS_PARSE_CHUNK_CONCURRENCY": "1",
+            "MYGITNEXUS_HOME": SANDBOX_INDEX_REGISTRY,
+            "MYGITNEXUS_NO_GITIGNORE": "1",
+            "MYGITNEXUS_WORKER_POOL_SIZE": "1",
+            "MYGITNEXUS_PARSE_CHUNK_CONCURRENCY": "1",
         }
     )
     return env
@@ -250,7 +250,7 @@ def _run_graph_cli(
     command = [
         *prefix,
         SANDBOX_NODE,
-        SANDBOX_GITNEXUS_ENTRYPOINT,
+        SANDBOX_MYGITNEXUS_ENTRYPOINT,
         *arguments,
     ]
     result = run_managed(
@@ -314,13 +314,13 @@ def _scrub_and_verify_graph(prefix: Sequence[str]) -> None:
 
 
 def _validate_graph_metadata(root: Path, sanitized_head: str) -> None:
-    for name in ("gitnexus.json", "meta.json", "lbug"):
-        path = root / ".gitnexus" / name
+    for name in ("mygitnexus.json", "meta.json", "lbug"):
+        path = root / ".mygitnexus" / name
         metadata = path.lstat()
         if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode):
             raise SandboxError(f"sanitized graph asset must be regular and non-symlink: {path}")
     try:
-        metadata_payload = json.loads((root / ".gitnexus" / "gitnexus.json").read_text())
+        metadata_payload = json.loads((root / ".mygitnexus" / "mygitnexus.json").read_text())
     except (OSError, json.JSONDecodeError) as exc:
         raise SandboxError("sanitized graph metadata is malformed") from exc
     if metadata_payload.get("lastCommit") != sanitized_head:

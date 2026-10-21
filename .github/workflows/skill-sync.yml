@@ -1,7 +1,7 @@
 # Drift guard for the shipped engineering-skill copies (#2431).
 # ci.yml carries `paths-ignore: ['**.md', ...]`, so an md-only skill edit —
 # the most common future edit to these trees — would otherwise merge without
-# gitnexus/test/unit/shipped-skills-sync.test.ts ever running, and the drift
+# mygitnexus/test/unit/shipped-skills-sync.test.ts ever running, and the drift
 # would first surface in someone else's CI run. This workflow triggers
 # exactly on the guarded trees.
 name: Skill copy sync
@@ -9,28 +9,28 @@ name: Skill copy sync
 on:
   pull_request:
     paths:
-      - '.claude/skills/gitnexus-*/**'
-      - '.claude/skills/gitnexus/**'
-      - 'gitnexus/skills/**'
-      - 'gitnexus-claude-plugin/skills/**'
-      - 'gitnexus-cursor-integration/skills/**'
-      - 'gitnexus/test/unit/shipped-skills-sync.test.ts'
-      - 'gitnexus/test/unit/skills-steering.test.ts'
-      - 'gitnexus/test/unit/engineering-skills-contract.test.ts'
-      - 'gitnexus/test/unit/evidence-provenance-helper.test.ts'
+      - '.claude/skills/mygitnexus-*/**'
+      - '.claude/skills/mygitnexus/**'
+      - 'mygitnexus/skills/**'
+      - 'mygitnexus-claude-plugin/skills/**'
+      - 'mygitnexus-cursor-integration/skills/**'
+      - 'mygitnexus/test/unit/shipped-skills-sync.test.ts'
+      - 'mygitnexus/test/unit/skills-steering.test.ts'
+      - 'mygitnexus/test/unit/engineering-skills-contract.test.ts'
+      - 'mygitnexus/test/unit/evidence-provenance-helper.test.ts'
       - '.github/workflows/skill-sync.yml'
   push:
     branches: [main]
     paths:
-      - '.claude/skills/gitnexus-*/**'
-      - '.claude/skills/gitnexus/**'
-      - 'gitnexus/skills/**'
-      - 'gitnexus-claude-plugin/skills/**'
-      - 'gitnexus-cursor-integration/skills/**'
-      - 'gitnexus/test/unit/shipped-skills-sync.test.ts'
-      - 'gitnexus/test/unit/skills-steering.test.ts'
-      - 'gitnexus/test/unit/engineering-skills-contract.test.ts'
-      - 'gitnexus/test/unit/evidence-provenance-helper.test.ts'
+      - '.claude/skills/mygitnexus-*/**'
+      - '.claude/skills/mygitnexus/**'
+      - 'mygitnexus/skills/**'
+      - 'mygitnexus-claude-plugin/skills/**'
+      - 'mygitnexus-cursor-integration/skills/**'
+      - 'mygitnexus/test/unit/shipped-skills-sync.test.ts'
+      - 'mygitnexus/test/unit/skills-steering.test.ts'
+      - 'mygitnexus/test/unit/engineering-skills-contract.test.ts'
+      - 'mygitnexus/test/unit/evidence-provenance-helper.test.ts'
       - '.github/workflows/skill-sync.yml'
 
 concurrency:
@@ -54,13 +54,13 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: gitnexus/package-lock.json
-      - name: Build gitnexus-shared
+          cache-dependency-path: mygitnexus/package-lock.json
+      - name: Build mygitnexus-shared
         run: npm ci && npm run build
-        working-directory: gitnexus-shared
-      - name: Install gitnexus
+        working-directory: mygitnexus-shared
+      - name: Install mygitnexus
         run: npm ci
-        working-directory: gitnexus
+        working-directory: mygitnexus
       - name: Run distribution, steering, and engineering-contract guards
         run: >-
           npx vitest run
@@ -68,4 +68,4 @@ jobs:
           test/unit/skills-steering.test.ts
           test/unit/engineering-skills-contract.test.ts
           test/unit/evidence-provenance-helper.test.ts
-        working-directory: gitnexus
+        working-directory: mygitnexus

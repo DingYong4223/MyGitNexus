@@ -1,6 +1,6 @@
 """Trusted runtime views for isolated workflow-benchmark sessions.
 
-The benchmark never mounts an operator checkout wholesale. GitNexus is
+The benchmark never mounts an operator checkout wholesale. MyGitNexus is
 exposed as a minimal, harness-owned runtime, while the optional Compound
 Engineering comparator is copied into a bounded immutable snapshot containing
 only Claude plugin inputs.
@@ -22,13 +22,13 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from .proposer_sandbox import (
-    SANDBOX_GITNEXUS,
-    SANDBOX_GITNEXUS_SHARED,
+    SANDBOX_MYGITNEXUS,
+    SANDBOX_MYGITNEXUS_SHARED,
     ReadOnlyMount,
     SandboxError,
 )
 
-PINNED_GITNEXUS_VERSION = "1.6.9"
+PINNED_MYGITNEXUS_VERSION = "1.6.9"
 HARNESS_ROOT = Path(__file__).resolve().parents[2]
 
 CE_ARMS = frozenset({"ce_workflow", "ce_workflow_direct", "ce_review"})
@@ -161,66 +161,66 @@ def _validated_runtime_component(
         mode = source.lstat().st_mode
         resolved = source.resolve(strict=True)
     except OSError as exc:
-        raise SandboxError(f"pinned GitNexus runtime component is unavailable: {source}: {exc}") from exc
+        raise SandboxError(f"pinned MyGitNexus runtime component is unavailable: {source}: {exc}") from exc
     expected_type = stat.S_ISDIR(mode) if directory else stat.S_ISREG(mode)
     if stat.S_ISLNK(mode) or not expected_type or resolved != source:
         kind = "directory" if directory else "file"
-        raise SandboxError(f"pinned GitNexus runtime component must be a real {kind}: {source}")
+        raise SandboxError(f"pinned MyGitNexus runtime component must be a real {kind}: {source}")
     return ReadOnlyMount(source=source, target=target)
 
 
-def trusted_gitnexus_runtime_mounts() -> tuple[ReadOnlyMount, ...]:
+def trusted_mygitnexus_runtime_mounts() -> tuple[ReadOnlyMount, ...]:
     """Expose only the files needed by the pinned CLI and linked shared package."""
 
     runtime = _validated_runtime_root(
-        HARNESS_ROOT / "gitnexus",
-        label="pinned GitNexus runtime",
+        HARNESS_ROOT / "mygitnexus",
+        label="pinned MyGitNexus runtime",
     )
     shared = _validated_runtime_root(
-        HARNESS_ROOT / "gitnexus-shared",
-        label="pinned GitNexus shared runtime",
+        HARNESS_ROOT / "mygitnexus-shared",
+        label="pinned MyGitNexus shared runtime",
     )
     mounts = (
         _validated_runtime_component(
             runtime,
             "dist",
-            f"{SANDBOX_GITNEXUS}/dist",
+            f"{SANDBOX_MYGITNEXUS}/dist",
             directory=True,
         ),
         _validated_runtime_component(
             runtime,
             "package.json",
-            f"{SANDBOX_GITNEXUS}/package.json",
+            f"{SANDBOX_MYGITNEXUS}/package.json",
             directory=False,
         ),
         _validated_runtime_component(
             runtime,
             "node_modules",
-            f"{SANDBOX_GITNEXUS}/node_modules",
+            f"{SANDBOX_MYGITNEXUS}/node_modules",
             directory=True,
         ),
         _validated_runtime_component(
             runtime,
             "vendor",
-            f"{SANDBOX_GITNEXUS}/vendor",
+            f"{SANDBOX_MYGITNEXUS}/vendor",
             directory=True,
         ),
         _validated_runtime_component(
             shared,
             "dist",
-            f"{SANDBOX_GITNEXUS_SHARED}/dist",
+            f"{SANDBOX_MYGITNEXUS_SHARED}/dist",
             directory=True,
         ),
         _validated_runtime_component(
             shared,
             "package.json",
-            f"{SANDBOX_GITNEXUS_SHARED}/package.json",
+            f"{SANDBOX_MYGITNEXUS_SHARED}/package.json",
             directory=False,
         ),
         _validated_runtime_component(
             runtime,
             "hooks/claude",
-            f"{SANDBOX_GITNEXUS}/hooks/claude",
+            f"{SANDBOX_MYGITNEXUS}/hooks/claude",
             directory=True,
         ),
     )
@@ -230,24 +230,24 @@ def trusted_gitnexus_runtime_mounts() -> tuple[ReadOnlyMount, ...]:
         entrypoint_mode = entrypoint.lstat().st_mode
         package = json.loads(mounts[1].source.read_text())
     except (OSError, json.JSONDecodeError) as exc:
-        raise SandboxError(f"pinned GitNexus runtime metadata is invalid: {exc}") from exc
+        raise SandboxError(f"pinned MyGitNexus runtime metadata is invalid: {exc}") from exc
     if stat.S_ISLNK(entrypoint_mode) or not stat.S_ISREG(entrypoint_mode):
-        raise SandboxError(f"pinned GitNexus runtime entrypoint must be regular and non-symlink: {entrypoint}")
-    if package.get("version") != PINNED_GITNEXUS_VERSION:
+        raise SandboxError(f"pinned MyGitNexus runtime entrypoint must be regular and non-symlink: {entrypoint}")
+    if package.get("version") != PINNED_MYGITNEXUS_VERSION:
         raise SandboxError(
-            "pinned GitNexus runtime version drifted: "
-            f"expected {PINNED_GITNEXUS_VERSION}, got {package.get('version')!r}"
+            "pinned MyGitNexus runtime version drifted: "
+            f"expected {PINNED_MYGITNEXUS_VERSION}, got {package.get('version')!r}"
         )
 
-    linked_shared = mounts[2].source / "gitnexus-shared"
+    linked_shared = mounts[2].source / "mygitnexus-shared"
     if not linked_shared.is_symlink() or linked_shared.resolve(strict=True) != shared:
-        raise SandboxError("pinned GitNexus runtime has an unexpected gitnexus-shared dependency")
+        raise SandboxError("pinned MyGitNexus runtime has an unexpected mygitnexus-shared dependency")
     try:
         shared_package = json.loads(mounts[5].source.read_text())
     except (OSError, json.JSONDecodeError) as exc:
-        raise SandboxError(f"pinned GitNexus shared runtime metadata is invalid: {exc}") from exc
-    if shared_package.get("name") != "gitnexus-shared":
-        raise SandboxError("pinned GitNexus shared runtime has an unexpected package identity")
+        raise SandboxError(f"pinned MyGitNexus shared runtime metadata is invalid: {exc}") from exc
+    if shared_package.get("name") != "mygitnexus-shared":
+        raise SandboxError("pinned MyGitNexus shared runtime has an unexpected package identity")
     return mounts
 
 

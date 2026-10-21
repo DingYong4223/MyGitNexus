@@ -57,7 +57,7 @@ function main() {
     fs.readFileSync(
       path.join(
         process.env.RUNNER_TEMP,
-        'gitnexus-review-control',
+        'mygitnexus-review-control',
         'review-input',
         'changed-paths.json',
       ),
@@ -69,7 +69,7 @@ function main() {
     headSha: process.env.HEAD_SHA,
     baseSha: process.env.MERGE_BASE_SHA,
     headDir: path.join(process.env.GITHUB_WORKSPACE, 'pr-target'),
-    baseDir: path.join(process.env.RUNNER_TEMP, 'gitnexus-review-merge-base'),
+    baseDir: path.join(process.env.RUNNER_TEMP, 'mygitnexus-review-merge-base'),
     changedPaths: new Set(manifest.head_paths || []),
     basePaths: new Set(manifest.base_paths || []),
   });

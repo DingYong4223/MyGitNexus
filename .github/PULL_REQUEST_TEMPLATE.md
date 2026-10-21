@@ -10,8 +10,8 @@
 
 <!-- Check all that apply -->
 
-- [ ] `gitnexus/` (CLI / core / MCP server)
-- [ ] `gitnexus-web/` (Vite / React UI)
+- [ ] `mygitnexus/` (CLI / core / MCP server)
+- [ ] `mygitnexus-web/` (Vite / React UI)
 - [ ] `.github/` (workflows, actions)
 - [ ] `eval/` or other tooling
 - [ ] Docs / agent config only (`AGENTS.md`, `CLAUDE.md`, `.cursor/`, `llms.txt`, etc.)
@@ -34,16 +34,16 @@
 
 <!-- What you ran; paste commands. Omit sections that do not apply. -->
 
-- [ ] `cd gitnexus && npm test`
-- [ ] `cd gitnexus && npm run test:integration` *(if core/indexing/MCP paths changed)*
-- [ ] `cd gitnexus && npx tsc --noEmit`
-- [ ] `cd gitnexus-web && npm test` *(if web changed)*
-- [ ] `cd gitnexus-web && npx tsc -b --noEmit` *(if web changed)*
-- [ ] Manual / Playwright E2E *(note environment — see `gitnexus-web/e2e/`)*
+- [ ] `cd mygitnexus && npm test`
+- [ ] `cd mygitnexus && npm run test:integration` *(if core/indexing/MCP paths changed)*
+- [ ] `cd mygitnexus && npx tsc --noEmit`
+- [ ] `cd mygitnexus-web && npm test` *(if web changed)*
+- [ ] `cd mygitnexus-web && npx tsc -b --noEmit` *(if web changed)*
+- [ ] Manual / Playwright E2E *(note environment — see `mygitnexus-web/e2e/`)*
 
 ## Risk & rollout
 
-<!-- Breaking changes, migrations, index refresh (`npx gitnexus analyze`), release notes -->
+<!-- Breaking changes, migrations, index refresh (`npx mygitnexus analyze`), release notes -->
 
 ## Checklist
 

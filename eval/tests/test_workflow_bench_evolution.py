@@ -171,7 +171,7 @@ def test_candidate_gate_caps_large_per_task_efficiency_regressions():
 
 def test_candidate_overlay_is_skill_only_and_content_addressed(tmp_path):
     overlay = tmp_path / "candidate"
-    skill = overlay / ".claude" / "skills" / "gitnexus-work" / "SKILL.md"
+    skill = overlay / ".claude" / "skills" / "mygitnexus-work" / "SKILL.md"
     skill.parent.mkdir(parents=True)
     skill.write_text("candidate one\n")
 
@@ -182,21 +182,21 @@ def test_candidate_overlay_is_skill_only_and_content_addressed(tmp_path):
     assert first != second
 
     review_overlay = tmp_path / "review-candidate"
-    review_skill = review_overlay / ".claude" / "skills" / "gitnexus-review" / "SKILL.md"
+    review_skill = review_overlay / ".claude" / "skills" / "mygitnexus-review" / "SKILL.md"
     review_skill.parent.mkdir(parents=True)
     review_skill.write_text("review candidate\n")
     with pytest.raises(ValueError, match="plan,work"):
         candidate_overlay_digest(review_overlay)
 
     invalid = tmp_path / "invalid"
-    source = invalid / "gitnexus" / "src" / "cli" / "index.ts"
+    source = invalid / "mygitnexus" / "src" / "cli" / "index.ts"
     source.parent.mkdir(parents=True)
     source.write_text("gaming the verifier\n")
     with pytest.raises(ValueError, match="may only contain Markdown files"):
         candidate_overlay_digest(invalid)
 
     config_overlay = tmp_path / "config-overlay"
-    config = config_overlay / ".claude" / "skills" / "gitnexus-work" / "mcp.json"
+    config = config_overlay / ".claude" / "skills" / "mygitnexus-work" / "mcp.json"
     config.parent.mkdir(parents=True)
     config.write_text("{}\n")
     with pytest.raises(ValueError, match="may only contain Markdown files"):
@@ -206,7 +206,7 @@ def test_candidate_overlay_is_skill_only_and_content_addressed(tmp_path):
 @pytest.mark.skipif(os.name == "nt", reason="overlay symlink coverage is POSIX-only")
 def test_candidate_overlay_rejects_a_linked_root(tmp_path):
     real_overlay = tmp_path / "real-overlay"
-    write_overlay_skill(real_overlay, "gitnexus-work")
+    write_overlay_skill(real_overlay, "mygitnexus-work")
     linked_overlay = tmp_path / "linked-overlay"
     linked_overlay.symlink_to(real_overlay, target_is_directory=True)
 
@@ -216,7 +216,7 @@ def test_candidate_overlay_rejects_a_linked_root(tmp_path):
 
 def test_candidate_overlay_bounds_directory_traversal(tmp_path):
     overlay = tmp_path / "candidate"
-    write_overlay_skill(overlay, "gitnexus-work")
+    write_overlay_skill(overlay, "mygitnexus-work")
     padding = overlay / "padding"
     padding.mkdir()
     for index in range(MAX_CANDIDATE_ENTRIES):
@@ -228,11 +228,11 @@ def test_candidate_overlay_bounds_directory_traversal(tmp_path):
 
 def test_required_candidate_arms_are_minimal_for_touched_skills(tmp_path):
     plan = tmp_path / "plan"
-    write_overlay_skill(plan, "gitnexus-plan")
+    write_overlay_skill(plan, "mygitnexus-plan")
     assert required_candidate_arms(plan) == ["candidate_workflow"]
 
     work = tmp_path / "work"
-    write_overlay_skill(work, "gitnexus-work")
+    write_overlay_skill(work, "mygitnexus-work")
     assert required_candidate_arms(work) == [
         "candidate_workflow",
         "candidate_workflow_direct",
@@ -244,7 +244,7 @@ def test_apply_candidate_overlay_creates_a_clean_ephemeral_commit(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
     subprocess.run(["git", "init", "--quiet", str(repo)], check=True)
-    incumbent = repo / ".claude" / "skills" / "gitnexus-work" / "SKILL.md"
+    incumbent = repo / ".claude" / "skills" / "mygitnexus-work" / "SKILL.md"
     incumbent.parent.mkdir(parents=True)
     incumbent.write_text("incumbent\n")
     subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
@@ -266,7 +266,7 @@ def test_apply_candidate_overlay_creates_a_clean_ephemeral_commit(tmp_path):
     )
 
     overlay = tmp_path / "candidate"
-    candidate = overlay / ".claude" / "skills" / "gitnexus-work" / "SKILL.md"
+    candidate = overlay / ".claude" / "skills" / "mygitnexus-work" / "SKILL.md"
     candidate.parent.mkdir(parents=True)
     candidate.write_text("candidate\n")
     hook_sentinel = tmp_path / "post-commit-ran"
@@ -315,7 +315,7 @@ def test_apply_candidate_overlay_creates_a_clean_ephemeral_commit(tmp_path):
     assert incumbent.read_text() == "candidate\n"
     git_commands = [command for command in sandbox.commands if command[0] == "/usr/bin/git"]
     assert [command[-1] for command in git_commands[:2]] == [
-        ".claude/skills/gitnexus-work/SKILL.md",
+        ".claude/skills/mygitnexus-work/SKILL.md",
         "--",
     ]
     assert all("/workspace" in command for command in git_commands)
@@ -339,7 +339,7 @@ def test_candidate_overlay_rejects_linked_destination_parents(tmp_path):
     outside.mkdir()
     (repo / ".claude" / "skills").symlink_to(outside, target_is_directory=True)
     overlay = tmp_path / "candidate"
-    write_overlay_skill(overlay, "gitnexus-work")
+    write_overlay_skill(overlay, "mygitnexus-work")
     sandbox = SimpleNamespace(
         clone=repo,
         run=lambda *args, **kwargs: pytest.fail("sandbox git must not run"),
@@ -356,7 +356,7 @@ def test_skill_fingerprint_rejects_linked_skill_roots(tmp_path):
     (outside / "SKILL.md").write_text("outside\n")
     skills = tmp_path / "repo" / ".claude" / "skills"
     skills.mkdir(parents=True)
-    (skills / "gitnexus-work").symlink_to(outside, target_is_directory=True)
+    (skills / "mygitnexus-work").symlink_to(outside, target_is_directory=True)
 
     with pytest.raises(ValueError, match="non-symlink directory"):
         skill_fingerprint(tmp_path / "repo", "workflow_direct")
@@ -550,6 +550,6 @@ def test_candidate_gate_promotes_on_a_two_run_resolution_margin():
 
 def test_overlay_skills_must_be_exercised_by_selected_candidate_arms(tmp_path):
     plan_overlay = tmp_path / "plan-overlay"
-    write_overlay_skill(plan_overlay, "gitnexus-plan")
-    assert unexercised_overlay_skills(plan_overlay, ["candidate_workflow_direct"]) == ["gitnexus-plan"]
+    write_overlay_skill(plan_overlay, "mygitnexus-plan")
+    assert unexercised_overlay_skills(plan_overlay, ["candidate_workflow_direct"]) == ["mygitnexus-plan"]
     assert unexercised_overlay_skills(plan_overlay, ["candidate_workflow"]) == []

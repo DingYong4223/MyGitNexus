@@ -85,8 +85,8 @@ def test_select_evidence_tolerates_an_explicit_null_cost():
 
 def test_load_jsonl_skips_blank_and_malformed_lines(tmp_path):
     path = tmp_path / "learnings.jsonl"
-    path.write_text('{"skill": "gitnexus-plan"}\n\nnot json\n[1, 2]\n{"skill": "gitnexus-work"}\n')
-    assert load_jsonl(path) == [{"skill": "gitnexus-plan"}, {"skill": "gitnexus-work"}]
+    path.write_text('{"skill": "mygitnexus-plan"}\n\nnot json\n[1, 2]\n{"skill": "mygitnexus-work"}\n')
+    assert load_jsonl(path) == [{"skill": "mygitnexus-plan"}, {"skill": "mygitnexus-work"}]
 
 
 def test_load_jsonl_missing_file_is_empty(tmp_path):
@@ -95,15 +95,15 @@ def test_load_jsonl_missing_file_is_empty(tmp_path):
 
 def test_read_learnings_keeps_the_most_recent_entries(tmp_path):
     path = tmp_path / "learnings.jsonl"
-    rows = [{"skill": "gitnexus-work", "n": i} for i in range(10)] + [
-        {"skill": "gitnexus-review", "n": 10},
-        {"skill": "gitnexus-lfg", "n": 11},
+    rows = [{"skill": "mygitnexus-work", "n": i} for i in range(10)] + [
+        {"skill": "mygitnexus-review", "n": 10},
+        {"skill": "mygitnexus-lfg", "n": 11},
     ]
     path.write_text("\n".join(json.dumps(row) for row in rows) + "\n")
     assert read_learnings(path, cap=3) == [
-        {"skill": "gitnexus-work", "n": 7},
-        {"skill": "gitnexus-work", "n": 8},
-        {"skill": "gitnexus-work", "n": 9},
+        {"skill": "mygitnexus-work", "n": 7},
+        {"skill": "mygitnexus-work", "n": 8},
+        {"skill": "mygitnexus-work", "n": 9},
     ]
 
 
@@ -125,7 +125,7 @@ def test_build_proposer_prompt_carries_evidence_constraints_and_paths(tmp_path):
     prompt = build_proposer_prompt(
         results_dir=tmp_path / "bench",
         evidence=[row(task="fail", resolved=False, error_kind="verify-failed")],
-        learnings=[{"skill": "gitnexus-work", "friction": "budget blown on reruns"}],
+        learnings=[{"skill": "mygitnexus-work", "friction": "budget blown on reruns"}],
         gate_summary=["candidate_workflow: keep_incumbent — quality regressed"],
         overlay_dir=tmp_path / "overlay",
         proposal_path=tmp_path / "proposal.md",
@@ -133,8 +133,8 @@ def test_build_proposer_prompt_carries_evidence_constraints_and_paths(tmp_path):
     )
     assert str(tmp_path / "overlay") in prompt
     assert str(tmp_path / "proposal.md") in prompt
-    assert "gitnexus-plan, gitnexus-work" in prompt
-    assert "node .gitnexus/run.cjs analyze" in prompt
+    assert "mygitnexus-plan, mygitnexus-work" in prompt
+    assert "node .mygitnexus/run.cjs analyze" in prompt
     assert "1 row(s) in /evidence/learnings.json" in prompt
     assert "1 selected row(s) in /evidence/selected-rows.json" in prompt
     assert "1 decision(s) in /evidence/gate-summary.json" in prompt
@@ -436,11 +436,11 @@ def test_runner_argv_pairs_each_incumbent_with_its_candidate(tmp_path):
         ]
     )
     overlay = tmp_path / "overlay"
-    skill = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill.parent.mkdir(parents=True)
     skill.write_text("candidate")
     task_bindings = [{"id": "task", "resolved_sha": "a" * 40}]
-    target_bases = {".claude/skills/gitnexus-plan/SKILL.md": "b" * 64}
+    target_bases = {".claude/skills/mygitnexus-plan/SKILL.md": "b" * 64}
     argv = runner_argv(
         args,
         tmp_path / "bench",
@@ -463,7 +463,7 @@ def test_runner_argv_pairs_each_incumbent_with_its_candidate(tmp_path):
 def test_runner_argv_omits_proposer_for_manual_overlay(tmp_path):
     args = build_parser().parse_args(["--tasks", "t.yaml", "--model", "pinned"])
     overlay = tmp_path / "overlay"
-    skill = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill.parent.mkdir(parents=True)
     skill.write_text("candidate")
 
@@ -524,7 +524,7 @@ def test_runner_argv_keeps_task_commit_pinned_when_ref_moves(tmp_path):
 
     args = build_parser().parse_args(["--tasks", "t.yaml", "--model", "pinned"])
     overlay = tmp_path / "overlay"
-    skill = overlay / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    skill = overlay / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     skill.parent.mkdir(parents=True)
     skill.write_text("candidate")
     argv = runner_argv(
@@ -609,7 +609,7 @@ def test_outer_runner_pid_namespace_kills_setsid_descendant(tmp_path):
 
 def test_resolve_incumbent_arms_rejects_incomplete_and_extra_explicit_sets(tmp_path):
     plan = tmp_path / "plan"
-    plan_skill = plan / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md"
+    plan_skill = plan / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md"
     plan_skill.parent.mkdir(parents=True)
     plan_skill.write_text("plan")
     assert resolve_incumbent_arms(plan, None) == ["workflow"]
@@ -617,7 +617,7 @@ def test_resolve_incumbent_arms_rejects_incomplete_and_extra_explicit_sets(tmp_p
         resolve_incumbent_arms(plan, ["workflow", "workflow_direct"])
 
     work = tmp_path / "work"
-    work_skill = work / ".claude" / "skills" / "gitnexus-work" / "SKILL.md"
+    work_skill = work / ".claude" / "skills" / "mygitnexus-work" / "SKILL.md"
     work_skill.parent.mkdir(parents=True)
     work_skill.write_text("work")
     assert resolve_incumbent_arms(work, None) == ["workflow", "workflow_direct"]

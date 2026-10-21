@@ -15,7 +15,7 @@ name: Commit fork prebuilds
 # It NEVER checks out or executes fork-controlled code: the producer already
 # `require()`-loaded + parsed each `.node` on its target platform in the
 # untrusted half (the correct place to run untrusted code). Here we only move
-# bytes and run git. The prebuilds touch ONLY gitnexus/vendor/<g>/prebuilds/**,
+# bytes and run git. The prebuilds touch ONLY mygitnexus/vendor/<g>/prebuilds/**,
 # never .github/ — so the GITHUB_TOKEN's lack of `workflows` scope is irrelevant.
 #
 # Pushing to a fork branch with the GITHUB_TOKEN works only when the contributor
@@ -109,7 +109,7 @@ jobs:
             printf '%s' "$value"
           }
 
-          SCHEMA=$(assert_field    schema    '^gitnexus\.ts-prebuild/v[0-9]+$')
+          SCHEMA=$(assert_field    schema    '^mygitnexus\.ts-prebuild/v[0-9]+$')
           PR_NUMBER=$(assert_field pr_number  '^[0-9]+$')
           HEAD_SHA=$(assert_field  head_sha   '^[0-9a-f]{40}$')
           HEAD_REF=$(assert_field  head_ref   '^[A-Za-z0-9._/-]+$')
@@ -221,7 +221,7 @@ jobs:
           const changed = [];
           for (const grammar of grammars) {
             const name = `tree-sitter-${grammar}`;
-            const dest = `${checkout}/gitnexus/vendor/${name}/prebuilds`;
+            const dest = `${checkout}/mygitnexus/vendor/${name}/prebuilds`;
             // A grammar with 5/6 prebuilds silently breaks node-gyp-build on the
             // 6th platform — refuse a partial result.
             for (const pa of PLATFORMS) {
@@ -250,7 +250,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          git add gitnexus/vendor/tree-sitter-*/prebuilds
+          git add mygitnexus/vendor/tree-sitter-*/prebuilds
           if git diff --cached --quiet; then
             echo "Prebuilds byte-identical to the fork branch — nothing to commit."
             echo "result=nothing-to-commit" >> "$GITHUB_OUTPUT"
@@ -270,7 +270,7 @@ jobs:
           fi
 
           grammars=$(git diff --cached --name-only \
-            | sed -n 's#gitnexus/vendor/\(tree-sitter-[a-z0-9]*\)/.*#\1#p' | sort -u | paste -sd, -)
+            | sed -n 's#mygitnexus/vendor/\(tree-sitter-[a-z0-9]*\)/.*#\1#p' | sort -u | paste -sd, -)
 
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
@@ -313,7 +313,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          marker="<!-- gitnexus:ts-prebuild-fork -->"
+          marker="<!-- mygitnexus:ts-prebuild-fork -->"
           case "${RESULT}" in
             applied)
               body="${marker}
@@ -329,7 +329,7 @@ jobs:
           ⏳ The PR head moved while the prebuilds were building, so they weren't pushed. Push another commit (or wait for the next build) and they'll be re-cut. ([builder run](${RUN_URL}))" ;;
             push-failed)
               body="${marker}
-          ⚠️ Rebuilt native prebuilds are ready but **couldn't be pushed to your fork branch**. Tick **Allow edits by maintainers** in the PR sidebar so CI can commit them — or download them from the [builder run](${RUN_URL}) artifacts (\`ts-prebuild-*\`) and commit them under \`gitnexus/vendor/<grammar>/prebuilds/\` yourself." ;;
+          ⚠️ Rebuilt native prebuilds are ready but **couldn't be pushed to your fork branch**. Tick **Allow edits by maintainers** in the PR sidebar so CI can commit them — or download them from the [builder run](${RUN_URL}) artifacts (\`ts-prebuild-*\`) and commit them under \`mygitnexus/vendor/<grammar>/prebuilds/\` yourself." ;;
             *)
               body="${marker}
           ❓ Prebuild delivery finished in an unexpected state (\`${RESULT:-unknown}\`). See the [builder run](${RUN_URL})." ;;

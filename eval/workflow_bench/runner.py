@@ -1,4 +1,4 @@
-"""Benchmark the gitnexus-plan/work workflow against a baseline agent.
+"""Benchmark the mygitnexus-plan/work workflow against a baseline agent.
 
 Usage:
     uv run --locked --extra dev python -m workflow_bench.runner \
@@ -8,8 +8,8 @@ Usage:
 Each task runs in a fresh detached git worktree of the target repo, once per
 arm per run:
 
-* ``workflow`` — two headless Claude Code sessions: gitnexus-plan, then
-  gitnexus-work on the produced plan.
+* ``workflow`` — two headless Claude Code sessions: mygitnexus-plan, then
+  mygitnexus-work on the produced plan.
 * ``candidate_workflow`` / ``candidate_workflow_direct`` — the matching
   workflow arm with a prompt-only candidate overlay committed in its clone.
 * ``baseline`` — one headless session with the same task text and the Skill
@@ -75,9 +75,9 @@ from .oracle_assets import (
 from .process_control import ManagedProcessError
 from .promotion_apply import committed_destination_base_digests
 from .proposer_sandbox import (
-    SANDBOX_GITNEXUS as SANDBOX_GITNEXUS,
-    SANDBOX_GITNEXUS_REGISTRY,
-    SANDBOX_GITNEXUS_SHARED as SANDBOX_GITNEXUS_SHARED,
+    SANDBOX_MYGITNEXUS as SANDBOX_MYGITNEXUS,
+    SANDBOX_MYGITNEXUS_REGISTRY,
+    SANDBOX_MYGITNEXUS_SHARED as SANDBOX_MYGITNEXUS_SHARED,
     SANDBOX_NODE as SANDBOX_NODE,
     SANDBOX_WORKSPACE,
     ReadOnlyMount,
@@ -115,10 +115,10 @@ from .runner_artifacts import (
 )
 from .runner_sessions import (
     BUILTIN_AGENT_TOOLS as BUILTIN_AGENT_TOOLS,
-    GITNEXUS_MUTATING_TOOLS as GITNEXUS_MUTATING_TOOLS,
-    GITNEXUS_READ_ONLY_TOOLS as GITNEXUS_READ_ONLY_TOOLS,
+    MYGITNEXUS_MUTATING_TOOLS as MYGITNEXUS_MUTATING_TOOLS,
+    MYGITNEXUS_READ_ONLY_TOOLS as MYGITNEXUS_READ_ONLY_TOOLS,
     MAX_TRANSCRIPT_BYTES as MAX_TRANSCRIPT_BYTES,
-    SANDBOX_GITNEXUS_ENTRYPOINT as SANDBOX_GITNEXUS_ENTRYPOINT,
+    SANDBOX_MYGITNEXUS_ENTRYPOINT as SANDBOX_MYGITNEXUS_ENTRYPOINT,
     USAGE_FIELDS,
     allowed_agent_tools,
     run_claude,
@@ -139,17 +139,17 @@ from .sanitized_graph import (
 from .runtime_mounts import (
     CE_ARMS,
     HARNESS_ROOT as HARNESS_ROOT,
-    PINNED_GITNEXUS_VERSION as PINNED_GITNEXUS_VERSION,
+    PINNED_MYGITNEXUS_VERSION as PINNED_MYGITNEXUS_VERSION,
     ce_plugin_dir_for_arm,
     ce_plugin_mounts_for_arm,
     staged_ce_plugin_snapshot,
-    trusted_gitnexus_runtime_mounts,
+    trusted_mygitnexus_runtime_mounts,
     validate_ce_plugin_inputs,
 )
 from .task_assets import TaskAssetCache, TaskAssetSnapshot, stage_task_assets
 
 PLAN_PROMPT = (
-    "Use the gitnexus-plan skill for: {task}\n"
+    "Use the mygitnexus-plan skill for: {task}\n"
     "Headless run: make reasonable choices without asking; the plan document "
     "is the deliverable."
 )
@@ -164,12 +164,12 @@ HEADLESS_VERIFY = (
     "actual output — never background them or wait on scheduled wakeups."
 )
 WORK_PROMPT = (
-    "Use the gitnexus-work skill to execute the plan at {plan}.\n"
+    "Use the mygitnexus-work skill to execute the plan at {plan}.\n"
     "Headless run: proceed without asking; report Definition of Done status "
     "at the end." + HEADLESS_VERIFY
 )
 WORK_DIRECT_PROMPT = (
-    "Use the gitnexus-work skill for: {task}\n"
+    "Use the mygitnexus-work skill for: {task}\n"
     "Headless run: proceed without asking. The user explicitly declines a "
     "separate planning pass — execute in direct mode with the skill's "
     "execution discipline." + HEADLESS_VERIFY
@@ -180,7 +180,7 @@ BASELINE_PROMPT = (
     "relevant tests. Work autonomously without asking questions."
 )
 # External-comparator arms: the compound-engineering plugin's plan/work family,
-# prompted with the same structure as the gitnexus arms so only the skill
+# prompted with the same structure as the mygitnexus arms so only the skill
 # family differs. The plugin ships user-level, so clones need no repo files.
 CE_PLAN_PROMPT = (
     "Use the ce-plan skill (compound-engineering plugin) for: {task}\n"
@@ -203,7 +203,7 @@ CE_WORK_DIRECT_PROMPT = (
 # changes; both arms review the same working tree and write to the same file
 # so `verify` can gate on a produced review.
 REVIEW_PROMPT = (
-    "Use the gitnexus-review skill to review the local uncommitted changes "
+    "Use the mygitnexus-review skill to review the local uncommitted changes "
     "in this repository. {task}\n"
     "Headless run: proceed without asking; do not post to GitHub or anywhere "
     "external; write the complete review to review-output.md in the "
@@ -221,11 +221,11 @@ CE_REVIEW_PROMPT = (
 # Skill each arm's session(s) must actually invoke; a session that never ran
 # its skill is a silent no-op arm, not a data point (checked via transcript).
 ARM_EXPECTED_SKILLS: dict[str, tuple[str, ...]] = {
-    "workflow": ("gitnexus-plan", "gitnexus-work"),
+    "workflow": ("mygitnexus-plan", "mygitnexus-work"),
     "ce_workflow": ("ce-plan", "ce-work"),
-    "workflow_direct": ("gitnexus-work",),
+    "workflow_direct": ("mygitnexus-work",),
     "ce_workflow_direct": ("ce-work",),
-    "review": ("gitnexus-review",),
+    "review": ("mygitnexus-review",),
     "ce_review": ("ce-code-review",),
 }
 
@@ -289,7 +289,7 @@ def _run_hidden_oracle(
         with staged_task_oracle(sandbox.private_root, snapshot) as stage_root:
             oracle_env = build_sandbox_environment()
             # A private RO bind at a random workspace sibling preserves each
-            # oracle's ../gitnexus import as the candidate implementation. The
+            # oracle's ../mygitnexus import as the candidate implementation. The
             # empty mountpoint exists only post-model and is removed before the
             # credited patch is captured.
             oracle_mount = f"{SANDBOX_WORKSPACE}/{mount_name}"
@@ -332,12 +332,12 @@ def _evaluated_skill_roots(worktree: Path, arm: str) -> tuple[Path, ...]:
     return tuple(worktree / ".claude" / "skills" / name for name in EVALUATED_ARM_SKILLS.get(arm, ()))
 
 
-def isolated_gitnexus_registry_mount(worktree: Path, parent: Path) -> ReadOnlyMount:
+def isolated_mygitnexus_registry_mount(worktree: Path, parent: Path) -> ReadOnlyMount:
     """Create a one-clone registry that cannot route MCP to any host repo."""
 
-    metadata_path = worktree / ".gitnexus" / "gitnexus.json"
+    metadata_path = worktree / ".mygitnexus" / "mygitnexus.json"
     if not metadata_path.exists():
-        metadata_path = worktree / ".gitnexus" / "meta.json"
+        metadata_path = worktree / ".mygitnexus" / "meta.json"
     mode = metadata_path.lstat().st_mode
     if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
         raise SandboxError(f"benchmark index metadata must be regular and non-symlink: {metadata_path}")
@@ -359,7 +359,7 @@ def isolated_gitnexus_registry_mount(worktree: Path, parent: Path) -> ReadOnlyMo
     entry: dict[str, Any] = {
         "name": "benchmark-target",
         "path": SANDBOX_WORKSPACE,
-        "storagePath": f"{SANDBOX_WORKSPACE}/.gitnexus",
+        "storagePath": f"{SANDBOX_WORKSPACE}/.mygitnexus",
         "indexedAt": indexed_at,
         "lastCommit": last_commit,
     }
@@ -381,7 +381,7 @@ def isolated_gitnexus_registry_mount(worktree: Path, parent: Path) -> ReadOnlyMo
             view = view[written:]
     finally:
         os.close(descriptor)
-    return ReadOnlyMount(source=registry, target=SANDBOX_GITNEXUS_REGISTRY)
+    return ReadOnlyMount(source=registry, target=SANDBOX_MYGITNEXUS_REGISTRY)
 
 
 def run_arm(
@@ -536,13 +536,13 @@ def run_arm(
         )
         sessions.append(work_session)
     elif arm == "baseline_nomcp":
-        # Isolates the workflow-discipline question from the GitNexus-tools
+        # Isolates the workflow-discipline question from the MyGitNexus-tools
         # question: no skills AND no graph tools.
         sessions.append(
             run_claude(
                 BASELINE_PROMPT.format(task=task["prompt"]),
                 worktree,
-                disallowed_tools=["Skill", "mcp__gitnexus"],
+                disallowed_tools=["Skill", "mcp__mygitnexus"],
                 **{
                     **common,
                     "mcp_config_json": '{"mcpServers":{}}',
@@ -750,7 +750,7 @@ def _cost_cell(value: Any) -> str:
 def render_report(results: dict[str, dict[str, dict[str, Any]]]) -> str:
     """results: {task_id: {arm: aggregate}} → markdown report."""
     lines = [
-        "# gitnexus workflow benchmark",
+        "# mygitnexus workflow benchmark",
         "",
         "Medians across runs; savings rows = (baseline − arm) / baseline per arm.",
         "A negative saving means that arm spent more than baseline. churn =",
@@ -875,8 +875,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--auth-token",
-        default=os.environ.get("GITNEXUS_BENCH_AUTH_TOKEN"),
-        help="ANTHROPIC_API_KEY for the --base-url endpoint (prefer GITNEXUS_BENCH_AUTH_TOKEN env)",
+        default=os.environ.get("MYGITNEXUS_BENCH_AUTH_TOKEN"),
+        help="ANTHROPIC_API_KEY for the --base-url endpoint (prefer MYGITNEXUS_BENCH_AUTH_TOKEN env)",
     )
     parser.add_argument(
         "--include-expensive",
@@ -887,7 +887,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--candidate-overlay",
         type=Path,
         default=None,
-        help="directory mirroring .claude/skills/gitnexus-{plan,work}; applied only to candidate_* arms",
+        help="directory mirroring .claude/skills/mygitnexus-{plan,work}; applied only to candidate_* arms",
     )
     parser.add_argument(
         "--promotion-metric",
@@ -979,7 +979,7 @@ def main() -> None:
     try:
         bwrap_bin = preflight_bubblewrap()
         require_claude_sandbox_helpers()
-        runtime_mounts = trusted_gitnexus_runtime_mounts()
+        runtime_mounts = trusted_mygitnexus_runtime_mounts()
     except SandboxError as exc:
         parser.error(str(exc))
         raise AssertionError("ArgumentParser.error() returned unexpectedly")
@@ -1088,7 +1088,7 @@ def main() -> None:
                             clone=worktree,
                             snapshot=asset_snapshot,
                         )
-                        registry_mount = isolated_gitnexus_registry_mount(worktree, Path(trees))
+                        registry_mount = isolated_mygitnexus_registry_mount(worktree, Path(trees))
                         hidden_harness = worktree / "eval" / "workflow_bench"
                         oracle_visibility_mounts: list[ReadOnlyMount] = []
                         if hidden_harness.exists() or hidden_harness.is_symlink():

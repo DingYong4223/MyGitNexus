@@ -6,7 +6,7 @@
  * Windows when handed a JS string longer than 32 767 chars. The crash happens
  * inside the binding's V8 string-to-buffer conversion and cannot be intercepted
  * by JavaScript `try/catch`. `parseSourceSafe` (in
- * `gitnexus/src/core/tree-sitter/safe-parse.ts`) routes large inputs through
+ * `mygitnexus/src/core/tree-sitter/safe-parse.ts`) routes large inputs through
  * the chunked-callback overload of `parser.parse(input, ...)` which bypasses
  * the broken conversion path. PR #1433 fixed every direct call site at the
  * time; this rule prevents new direct calls from creeping in.

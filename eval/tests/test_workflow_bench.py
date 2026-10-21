@@ -166,17 +166,17 @@ def test_eval_ci_uses_locked_uv_and_blocking_native_containment_jobs():
     assert workflow.count("version: '0.11.23'") >= 3
     assert workflow.count("uv run --locked --extra dev python -m pytest") >= 3
     assert "eval-containment-linux:" in workflow
-    assert "GITNEXUS_REQUIRE_BWRAP_CANARY: '1'" in workflow
-    assert "GITNEXUS_REQUIRE_CLAUDE_CANARY: '1'" in workflow
+    assert "MYGITNEXUS_REQUIRE_BWRAP_CANARY: '1'" in workflow
+    assert "MYGITNEXUS_REQUIRE_CLAUDE_CANARY: '1'" in workflow
     assert containment["env"] == {
-        "GITNEXUS_REQUIRE_BWRAP_CANARY": "1",
-        "GITNEXUS_REQUIRE_CLAUDE_CANARY": "1",
+        "MYGITNEXUS_REQUIRE_BWRAP_CANARY": "1",
+        "MYGITNEXUS_REQUIRE_CLAUDE_CANARY": "1",
     }
     assert containment["timeout-minutes"] == 20
     assert containment_node_setup["with"] == {
         "node-version": "22.18.0",
         "cache": "npm",
-        "cache-dependency-path": "gitnexus/package-lock.json\ngitnexus-shared/package-lock.json\n",
+        "cache-dependency-path": "mygitnexus/package-lock.json\nmygitnexus-shared/package-lock.json\n",
     }
     assert (
         "CLAUDE_CANARY_BIN: ${{ runner.temp }}/claude-canary/node_modules/@anthropic-ai/claude-code-linux-x64/claude"
@@ -189,13 +189,13 @@ def test_eval_ci_uses_locked_uv_and_blocking_native_containment_jobs():
     assert claude_lock["packages"]["node_modules/@anthropic-ai/claude-code"]["integrity"].startswith("sha512-")
     assert "if(p.version!=='2.1.214') process.exit(1)" in workflow
     assert "'2.1.214 (Claude Code)'" in workflow
-    assert containment_steps["Build pinned shared runtime"]["working-directory"] == "gitnexus-shared"
+    assert containment_steps["Build pinned shared runtime"]["working-directory"] == "mygitnexus-shared"
     assert containment_steps["Build pinned shared runtime"]["run"].splitlines() == [
         "npm ci",
         "npm run build",
     ]
-    assert containment_steps["Install and build pinned GitNexus runtime"]["working-directory"] == "gitnexus"
-    assert containment_steps["Install and build pinned GitNexus runtime"]["run"].splitlines() == [
+    assert containment_steps["Install and build pinned MyGitNexus runtime"]["working-directory"] == "mygitnexus"
+    assert containment_steps["Install and build pinned MyGitNexus runtime"]["run"].splitlines() == [
         "npm ci",
         "npm run build",
     ]
@@ -216,7 +216,7 @@ def test_eval_ci_uses_locked_uv_and_blocking_native_containment_jobs():
         "-q",
     ]
     bwrap_canary_marker = re.compile(
-        r'@pytest\.mark\.skipif\(\s*os\.environ\.get\("GITNEXUS_REQUIRE_BWRAP_CANARY"\)',
+        r'@pytest\.mark\.skipif\(\s*os\.environ\.get\("MYGITNEXUS_REQUIRE_BWRAP_CANARY"\)',
         re.MULTILINE,
     )
     bwrap_canary_files = sorted(
@@ -245,7 +245,7 @@ def test_shipped_scenarios_opt_out_the_cross_module_cell_and_rebuild_graph_asset
     assert all("./node_modules/.bin/vitest run" in task["oracle"]["command"] for task in tasks)
     assert all("npx vitest" not in task["oracle"]["command"] for task in tasks)
     assert all(
-        '--config "$GITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"' in task["oracle"]["command"] for task in tasks
+        '--config "$MYGITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts"' in task["oracle"]["command"] for task in tasks
     )
     assert all({item["target"] for item in task["oracle"]["files"]} >= {"vitest.config.mts"} for task in tasks)
 

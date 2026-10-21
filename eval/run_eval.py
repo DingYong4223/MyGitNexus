@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-GitNexus SWE-bench Evaluation Runner
+MyGitNexus SWE-bench Evaluation Runner
 
-Main entry point for running SWE-bench evaluations with and without GitNexus.
+Main entry point for running SWE-bench evaluations with and without MyGitNexus.
 Supports running a single configuration or a full matrix of models x modes.
 
 Usage:
-    # Single run (default: native_augment mode — GitNexus tools + grep enrichment)
+    # Single run (default: native_augment mode — MyGitNexus tools + grep enrichment)
     python run_eval.py single -m claude-sonnet --subset lite --slice 0:5
 
-    # Baseline comparison (no GitNexus)
+    # Baseline comparison (no MyGitNexus)
     python run_eval.py single -m claude-sonnet --mode baseline --subset lite --slice 0:5
 
     # Matrix run (all models x all modes)
@@ -50,7 +50,7 @@ if _env_file.exists():
             if value and key not in os.environ:  # Don't override existing env vars
                 os.environ[key] = value
 
-logger = logging.getLogger("gitnexus_eval")
+logger = logging.getLogger("mygitnexus_eval")
 console = Console()
 app = typer.Typer(rich_markup_mode="rich", add_completion=False)
 
@@ -151,11 +151,11 @@ def _build_environment(config: dict, instance: dict):
     env_config = dict(config.get("environment", {}))
     env_class_name = env_config.pop("environment_class", "docker")
 
-    if env_class_name == "eval.environments.gitnexus_docker.GitNexusDockerEnvironment":
-        from environments.gitnexus_docker import GitNexusDockerEnvironment
+    if env_class_name == "eval.environments.mygitnexus_docker.MyGitNexusDockerEnvironment":
+        from environments.mygitnexus_docker import MyGitNexusDockerEnvironment
 
         env_config["image"] = get_swebench_docker_image(instance)
-        return GitNexusDockerEnvironment(**env_config)
+        return MyGitNexusDockerEnvironment(**env_config)
 
     from minisweagent.environments.docker import DockerEnvironment
 
@@ -163,14 +163,14 @@ def _build_environment(config: dict, instance: dict):
 
 
 def _build_agent(config: dict, model, env, instance_dir: Path, instance_id: str):
-    """Construct the GitNexus agent with trajectory output configured."""
-    from agents.gitnexus_agent import GitNexusAgent
+    """Construct the MyGitNexus agent with trajectory output configured."""
+    from agents.mygitnexus_agent import MyGitNexusAgent
 
     agent_config = dict(config.get("agent", {}))
-    agent_config.pop("agent_class", "eval.agents.gitnexus_agent.GitNexusAgent")
+    agent_config.pop("agent_class", "eval.agents.mygitnexus_agent.MyGitNexusAgent")
     traj_path = instance_dir / f"{instance_id}.traj.json"
     agent_config["output_path"] = traj_path
-    return GitNexusAgent(model, env, **agent_config)
+    return MyGitNexusAgent(model, env, **agent_config)
 
 
 def _extract_submission(env, info: dict, run_id: str) -> str:
@@ -222,7 +222,7 @@ def process_instance(
         "submission": "",
         "cost": 0.0,
         "n_calls": 0,
-        "gitnexus_metrics": {},
+        "mygitnexus_metrics": {},
     }
 
     agent = None
@@ -240,7 +240,7 @@ def process_instance(
         result["exit_status"] = info.get("exit_status")
         result["cost"] = agent.cost
         result["n_calls"] = agent.n_calls
-        result["gitnexus_metrics"] = agent.gitnexus_metrics.to_dict()
+        result["mygitnexus_metrics"] = agent.mygitnexus_metrics.to_dict()
 
         # Extract git diff patch from the container (SWE-bench needs the model_patch)
         result["submission"] = _extract_submission(env, info, run_id)
@@ -471,8 +471,8 @@ def list_configs():
     console.print("\n[bold]Available Modes:[/bold]")
     for name in AVAILABLE_MODES:
         config = load_yaml_config(MODES_DIR / f"{name}.yaml")
-        gn_mode = config.get("agent", {}).get("gitnexus_mode", "baseline")
-        console.print(f"  {name:<20} gitnexus_mode={gn_mode}")
+        gn_mode = config.get("agent", {}).get("mygitnexus_mode", "baseline")
+        console.print(f"  {name:<20} mygitnexus_mode={gn_mode}")
 
     console.print(f"\n[bold]Matrix:[/bold] {len(AVAILABLE_MODELS)} models x {len(AVAILABLE_MODES)} modes = {len(AVAILABLE_MODELS) * len(AVAILABLE_MODES)} configurations")
 
@@ -502,15 +502,15 @@ def _print_summary(results: list[dict], model: str, mode: str):
     table.add_row("Avg Cost/Instance", f"${total_cost / max(total, 1):.4f}")
     table.add_row("Avg Calls/Instance", f"{total_calls / max(total, 1):.1f}")
 
-    # GitNexus-specific metrics
+    # MyGitNexus-specific metrics
     gn_tool_calls = sum(
-        r.get("gitnexus_metrics", {}).get("total_tool_calls", 0) for r in results
+        r.get("mygitnexus_metrics", {}).get("total_tool_calls", 0) for r in results
     )
     gn_augment_hits = sum(
-        r.get("gitnexus_metrics", {}).get("augmentation_hits", 0) for r in results
+        r.get("mygitnexus_metrics", {}).get("augmentation_hits", 0) for r in results
     )
     if gn_tool_calls > 0:
-        table.add_row("GitNexus Tool Calls", str(gn_tool_calls))
+        table.add_row("MyGitNexus Tool Calls", str(gn_tool_calls))
     if gn_augment_hits > 0:
         table.add_row("Augmentation Hits", str(gn_augment_hits))
 
@@ -532,7 +532,7 @@ def _print_matrix_summary(all_results: dict[str, list[dict]]):
         completed = sum(1 for r in results if r.get("submission"))
         cost = sum(r.get("cost", 0) for r in results)
         calls = sum(r.get("n_calls", 0) for r in results)
-        gn_calls = sum(r.get("gitnexus_metrics", {}).get("total_tool_calls", 0) for r in results)
+        gn_calls = sum(r.get("mygitnexus_metrics", {}).get("total_tool_calls", 0) for r in results)
 
         table.add_row(
             run_id,

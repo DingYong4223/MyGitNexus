@@ -1,6 +1,6 @@
 # Swift Ingestion Gaps
 
-Tracks missing Swift features in the GitNexus ingestion pipeline. Organized by priority.
+Tracks missing Swift features in the MyGitNexus ingestion pipeline. Organized by priority.
 
 ## 🔴 High Priority
 

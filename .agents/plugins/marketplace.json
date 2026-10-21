@@ -1,15 +1,15 @@
 {
-  "name": "gitnexus-marketplace",
+  "name": "mygitnexus-marketplace",
   "interface": {
-    "displayName": "GitNexus"
+    "displayName": "MyGitNexus"
   },
   "plugins": [
     {
-      "name": "gitnexus",
-      "version": "1.6.93",
+      "name": "mygitnexus",
+      "version": "0.0.1",
       "source": {
         "source": "local",
-        "path": "./gitnexus-claude-plugin"
+        "path": "./mygitnexus-claude-plugin"
       },
       "policy": {
         "installation": "AVAILABLE",

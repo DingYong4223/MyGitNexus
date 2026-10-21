@@ -19,59 +19,59 @@ TOOL_METRIC_KEYS: Tuple[str, ...] = ("query", "context", "impact", "cypher", "ov
 TOOL_SPECS: Dict[str, ToolScriptSpec] = {
     "query": ToolScriptSpec(
         key="query",
-        bin_name="gitnexus-query",
+        bin_name="mygitnexus-query",
         endpoint="/tool/query",
         payload_builder=r'''query="$1"; task_ctx="${2:-}"; goal="${3:-}"
-[ -z "$query" ] && echo "Usage: gitnexus-query <query> [task_context] [goal]" && exit 1
+[ -z "$query" ] && echo "Usage: mygitnexus-query <query> [task_context] [goal]" && exit 1
 payload="{\"query\": \"$query\""
 [ -n "$task_ctx" ] && payload="$payload, \"task_context\": \"$task_ctx\""
 [ -n "$goal" ] && payload="$payload, \"goal\": \"$goal\""
 payload="$payload}"''',
-        fallback='cd /testbed && npx gitnexus query "$query" 2>&1',
+        fallback='cd /testbed && npx mygitnexus query "$query" 2>&1',
     ),
     "context": ToolScriptSpec(
         key="context",
-        bin_name="gitnexus-context",
+        bin_name="mygitnexus-context",
         endpoint="/tool/context",
         payload_builder=r'''name="$1"; file_path="${2:-}"
-[ -z "$name" ] && echo "Usage: gitnexus-context <symbol_name> [file_path]" && exit 1
+[ -z "$name" ] && echo "Usage: mygitnexus-context <symbol_name> [file_path]" && exit 1
 payload="{\"name\": \"$name\""
 [ -n "$file_path" ] && payload="$payload, \"file_path\": \"$file_path\""
 payload="$payload}"''',
-        fallback='cd /testbed && npx gitnexus context "$name" 2>&1',
+        fallback='cd /testbed && npx mygitnexus context "$name" 2>&1',
     ),
     "impact": ToolScriptSpec(
         key="impact",
-        bin_name="gitnexus-impact",
+        bin_name="mygitnexus-impact",
         endpoint="/tool/impact",
         payload_builder=r'''target="$1"; direction="${2:-upstream}"
-[ -z "$target" ] && echo "Usage: gitnexus-impact <symbol_name> [upstream|downstream]" && exit 1
+[ -z "$target" ] && echo "Usage: mygitnexus-impact <symbol_name> [upstream|downstream]" && exit 1
 payload="{\"target\": \"$target\", \"direction\": \"$direction\"}"''',
-        fallback='cd /testbed && npx gitnexus impact "$target" --direction "$direction" 2>&1',
+        fallback='cd /testbed && npx mygitnexus impact "$target" --direction "$direction" 2>&1',
     ),
     "cypher": ToolScriptSpec(
         key="cypher",
-        bin_name="gitnexus-cypher",
+        bin_name="mygitnexus-cypher",
         endpoint="/tool/cypher",
         payload_builder=r'''query="$1"
-[ -z "$query" ] && echo "Usage: gitnexus-cypher <cypher_query>" && exit 1
+[ -z "$query" ] && echo "Usage: mygitnexus-cypher <cypher_query>" && exit 1
 payload="{\"query\": \"$query\"}"''',
-        fallback='cd /testbed && npx gitnexus cypher "$query" 2>&1',
+        fallback='cd /testbed && npx mygitnexus cypher "$query" 2>&1',
     ),
     "overview": ToolScriptSpec(
         key="overview",
-        bin_name="gitnexus-overview",
+        bin_name="mygitnexus-overview",
         endpoint="/tool/list_repos",
         header='echo "=== Code Knowledge Graph Overview ==="',
         payload_builder='payload="{}"',
-        fallback='cd /testbed && npx gitnexus list 2>&1',
+        fallback='cd /testbed && npx mygitnexus list 2>&1',
     ),
     "augment": ToolScriptSpec(
         key="augment",
-        bin_name="gitnexus-augment",
+        bin_name="mygitnexus-augment",
         endpoint=None,
         payload_builder="",
-        fallback='cd /testbed && npx gitnexus augment "$1" 2>&1 || true',
+        fallback='cd /testbed && npx mygitnexus augment "$1" 2>&1 || true',
     ),
 }
 

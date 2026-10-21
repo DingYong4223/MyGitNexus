@@ -1,4 +1,4 @@
-title = "GitNexus"
+title = "MyGitNexus"
 
 [extend]
 useDefault = true
@@ -15,5 +15,5 @@ regexes = [
   '''test-api-key-redaction-check''',
 ]
 paths = [
-  '''gitnexus/test/unit/git-clone\.test\.ts''',
+  '''mygitnexus/test/unit/git-clone\.test\.ts''',
 ]

@@ -1,6 +1,6 @@
-# GitNexus PR Swarm Review — Orchestration (canonical, CLI-neutral)
+# MyGitNexus PR Swarm Review — Orchestration (canonical, CLI-neutral)
 
-This is the single source of truth for the GitNexus production-readiness PR review.
+This is the single source of truth for the MyGitNexus production-readiness PR review.
 Every per-CLI entrypoint (Claude Code skill/agents, Codex/Gemini/Cursor/Copilot prompts,
 or any AGENTS.md-driven agent) **reads this file and follows it**. Edit the review logic
 here, never in the per-CLI wrappers.
@@ -10,8 +10,8 @@ Run the seven specialized lanes below and synthesize one evidence-grounded revie
 
 ## Invocation
 
-The adapter passes a target: `<PR URL or PR number>` for the GitNexus repository
-(`https://github.com/abhigyanpatwari/GitNexus`). If no target was passed, ask for one.
+The adapter passes a target: `<PR URL or PR number>` for the MyGitNexus repository
+(`https://github.com/DingYong4223/MyGitNexus`). If no target was passed, ask for one.
 
 ## Execution modes
 
@@ -19,7 +19,7 @@ Pick the mode your runtime supports. **The output contract is identical in both 
 
 ### Swarm mode — runtimes with parallel subagents (e.g. Claude Code)
 
-Dispatch each lane as its own subagent (Claude Code: the `gitnexus-*` agents via the
+Dispatch each lane as its own subagent (Claude Code: the `mygitnexus-*` agents via the
 Agent tool). Lanes 1–2 run first (their output feeds the rest); lanes 3–6 run in parallel
 after lanes 1–2 complete; lane 7 runs last on the draft synthesis.
 
@@ -129,7 +129,7 @@ If no issues are found, say exactly:
 - **Prioritize:** risk model first, PR facts second, repository history third.
 - **Distinguish** confirmed findings from unverified suspicions.
 - **Cite** files, line ranges, checks, issue/PR references, or commands used.
-- **Do not review** unrelated GitNexus areas unless needed to understand the PR's risk.
+- **Do not review** unrelated MyGitNexus areas unless needed to understand the PR's risk.
 - **Treat as suspicious:** unrelated workflow cleanup, release/version bumps, parser + web
   UI refactors, Docker/CI churn, or test de-flake mixed with production behavior changes.
 - **Request split or rebase** when domains are not causally connected.

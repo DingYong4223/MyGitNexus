@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Results Analyzer for GitNexus SWE-bench Evaluation
+Results Analyzer for MyGitNexus SWE-bench Evaluation
 
 Reads evaluation results and generates comparative analysis:
 - Resolve rate by model x mode
 - Cost comparison (total, per-instance)
 - Token/API call efficiency
-- GitNexus tool usage patterns
+- MyGitNexus tool usage patterns
 - Augmentation hit rates
 
 Usage:
@@ -118,7 +118,7 @@ def compute_metrics(run_data: dict) -> dict:
         costs.append(model_stats.get("instance_cost", 0))
         api_calls.append(model_stats.get("api_calls", 0))
 
-        gn = info.get("gitnexus", {}).get("metrics", {})
+        gn = info.get("mygitnexus", {}).get("metrics", {})
         if gn:
             gn_tool_calls.append(gn.get("total_tool_calls", 0))
             gn_augment_hits.append(gn.get("augmentation_hits", 0))
@@ -130,7 +130,7 @@ def compute_metrics(run_data: dict) -> dict:
         for r in results:
             costs.append(r.get("cost", 0))
             api_calls.append(r.get("n_calls", 0))
-            gn = r.get("gitnexus_metrics", {})
+            gn = r.get("mygitnexus_metrics", {})
             if gn:
                 gn_tool_calls.append(gn.get("total_tool_calls", 0))
                 gn_augment_hits.append(gn.get("augmentation_hits", 0))
@@ -343,14 +343,14 @@ def compare_modes(
 
 
 @app.command()
-def gitnexus_usage(
+def mygitnexus_usage(
     results_dir: str = typer.Argument(..., help="Path to results directory"),
 ):
-    """Analyze GitNexus tool usage patterns across all runs."""
+    """Analyze MyGitNexus tool usage patterns across all runs."""
     results_path = Path(results_dir)
     runs = load_run_results(results_path)
 
-    console.print("\n[bold]GitNexus Tool Usage Analysis[/bold]\n")
+    console.print("\n[bold]MyGitNexus Tool Usage Analysis[/bold]\n")
 
     table = Table(title="Tool Usage by Run")
     table.add_column("Run", style="bold")
@@ -369,14 +369,14 @@ def gitnexus_usage(
         augment_hits = 0
 
         for traj in run_data.get("trajectories", {}).values():
-            gn = traj.get("info", {}).get("gitnexus", {}).get("metrics", {})
+            gn = traj.get("info", {}).get("mygitnexus", {}).get("metrics", {})
             for tool, count in gn.get("tool_calls", {}).items():
                 tool_totals[tool] = tool_totals.get(tool, 0) + count
             augment_hits += gn.get("augmentation_hits", 0)
 
         # Also check summary
         for r in run_data.get("summary", {}).get("results", []):
-            gn = r.get("gitnexus_metrics", {})
+            gn = r.get("mygitnexus_metrics", {})
             for tool, count in gn.get("tool_calls", {}).items():
                 tool_totals[tool] = tool_totals.get(tool, 0) + count
             augment_hits += gn.get("augmentation_hits", 0)

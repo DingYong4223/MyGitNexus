@@ -68,7 +68,7 @@ consistency with the new `METHOD_IMPLEMENTS` edge type.
 
 ### What happens on re-index?
 
-Running `npx gitnexus analyze` on a repository produces `METHOD_OVERRIDES`
+Running `npx mygitnexus analyze` on a repository produces `METHOD_OVERRIDES`
 edges going forward. The old `OVERRIDES` edges are replaced as part of the
 normal full re-index.
 
@@ -77,11 +77,11 @@ normal full re-index.
 The `OVERRIDES` compat alias will remain until a future major version. Removal
 will be announced in this file and in the changelog before it happens.
 
-## meta.json → gitnexus.json (PR #2363)
+## meta.json → mygitnexus.json (PR #2363)
 
 The per-repo index metadata file's primary name changed from
-`.gitnexus/meta.json` to `.gitnexus/gitnexus.json` (and from
-`branches/<slug>/meta.json` to `branches/<slug>/gitnexus.json` for
+`.mygitnexus/meta.json` to `.mygitnexus/mygitnexus.json` (and from
+`branches/<slug>/meta.json` to `branches/<slug>/mygitnexus.json` for
 multi-branch indexes). This is purely a filename change — the JSON content
 and every field in it are identical.
 
@@ -90,10 +90,10 @@ and every field in it are identical.
 **No.** Backward compatibility is handled automatically at runtime:
 
 - `saveMeta` dual-writes both filenames on every analyze, so `meta.json`
-  keeps existing and staying current. Older GitNexus binaries, still-running
+  keeps existing and staying current. Older MyGitNexus binaries, still-running
   MCP servers, and the shipped editor hooks that read `meta.json` continue
   to work unchanged.
-- `loadMeta` reads `gitnexus.json` first and falls back to `meta.json` when
+- `loadMeta` reads `mygitnexus.json` first and falls back to `meta.json` when
   the primary file is absent, so a repo indexed by an older version works
   without re-analysis.
 - Each `analyze` run also reconciles the two files (the fresher `indexedAt`
@@ -102,13 +102,13 @@ and every field in it are identical.
 
 ### What happens on re-index?
 
-Running `npx gitnexus analyze` writes both `gitnexus.json` and `meta.json`
+Running `npx mygitnexus analyze` writes both `mygitnexus.json` and `meta.json`
 with identical content. A pre-existing repo that only has `meta.json` gets
-`gitnexus.json` bootstrapped from it on the first run.
+`mygitnexus.json` bootstrapped from it on the first run.
 
 ### What about rollback?
 
-Downgrading to an older GitNexus version is safe: `meta.json` is always
+Downgrading to an older MyGitNexus version is safe: `meta.json` is always
 present and current, so the older binary sees the existing index (including
 the `incrementalInProgress` crash-recovery flag) instead of treating the
 repo as never analyzed.
@@ -166,14 +166,14 @@ and stored data are untouched.
 ## `schemaVersion` → `schemaFingerprint` (issue #2798)
 
 The field that decides whether an existing index can be reused changed in
-`.gitnexus/gitnexus.json` (and in each `branches/<slug>/gitnexus.json`):
+`.mygitnexus/mygitnexus.json` (and in each `branches/<slug>/mygitnexus.json`):
 `schemaVersion?: number` has been removed and `schemaFingerprint?: string`
 added. The new value is a 12-character digest of the graph DDL this build
 creates, so it *describes* the schema an index's tables were actually built
 from rather than asserting a number about it.
 
 An absent fingerprint is treated as a mismatch, and that is the whole
-backward-compatibility story: every index written by an earlier GitNexus
+backward-compatibility story: every index written by an earlier MyGitNexus
 carries no fingerprint, so it is rebuilt exactly once.
 
 ### Do I need to migrate?
@@ -182,7 +182,7 @@ carries no fingerprint, so it is rebuilt exactly once.
 upgrading logs one line —
 
 ```
-index schema changed (built by an unidentified GitNexus build, this build is <fingerprint>); forcing a full re-analyze so the database is recreated from the current schema.
+index schema changed (built by an unidentified MyGitNexus build, this build is <fingerprint>); forcing a full re-analyze so the database is recreated from the current schema.
 ```
 
 — and then performs that full re-analyze itself. The same run stamps the
@@ -195,7 +195,7 @@ resulting graph is what the current build would have produced anyway.
 
 The scope of that one-time cost is worth knowing before you hit it. It is
 per **index**, not per machine or per repository — branch-scoped index slots
-(#2106) each keep their own `gitnexus.json`, so every slot pays for itself
+(#2106) each keep their own `mygitnexus.json`, so every slot pays for itself
 the first time it is analyzed after the upgrade. On a very large repository
 a full re-analyze is substantial, not a blip; plan the first post-upgrade
 run accordingly.
@@ -216,11 +216,11 @@ DDL agrees, so concurrent branches never need renumbering and a mismatch is
 always a real mismatch. The retired ladder's per-version rationale (v2
 `BasicBlock.callees` through v35's generated relation cross-product) now
 lives only in git history:
-`git show 561f913a3:gitnexus/src/storage/repo-manager.ts`.
+`git show 561f913a3:mygitnexus/src/storage/repo-manager.ts`.
 
 ### What about rollback?
 
-Downgrading to an older GitNexus is safe. The older binary looks for
+Downgrading to an older MyGitNexus is safe. The older binary looks for
 `schemaVersion`, does not find one, treats the index as pre-versioning, and
 forces its own full rebuild — the same one-time cost in the other direction,
 never a stale or mismatched graph.
@@ -232,7 +232,7 @@ object literal rather than merged over the previous file, so a new build's
 write drops `schemaVersion` and an old build's write drops
 `schemaFingerprint` — neither field survives the other's run, and each binary
 then finds its own gate unsatisfied. This hits anyone running a pinned
-`npx gitnexus@<version>` alongside a local build, or an editor hook still on
+`npx mygitnexus@<version>` alongside a local build, or an editor hook still on
 an older release. It is a cost, not a correctness problem: each run rebuilds
 against its own schema, and the graph it serves is correct for the binary
 that produced it. Pin one version per index to avoid the churn.

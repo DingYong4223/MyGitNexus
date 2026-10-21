@@ -11,7 +11,7 @@ picks these up unchanged.)
 
 These tests lock in the #858 fix: the 5 vendored grammars
 (c/swift/kotlin/dart/proto) are classified from the shared manifest
-(.github/vendored-grammars.json), their ABI is read from gitnexus/vendor/<name>,
+(.github/vendored-grammars.json), their ABI is read from mygitnexus/vendor/<name>,
 and the report never renders a bare ``?`` placeholder. All network is mocked.
 """
 from __future__ import annotations
@@ -50,7 +50,7 @@ _ISSUE_BLOCKER_RE = re.compile(r"\*\*Blocked\*\* — (\d+) grammars? ")
 
 
 def _physical_vendor_grammars() -> set[str]:
-    vendor = _REPO_ROOT / "gitnexus" / "vendor"
+    vendor = _REPO_ROOT / "mygitnexus" / "vendor"
     return {
         p.name
         for p in vendor.iterdir()
@@ -103,7 +103,7 @@ def _render_report() -> tuple[str, int]:
 
 class ManifestClassification(TestCase):
     def test_manifest_matches_physical_vendor_dirs(self):
-        """Consistency guard: the manifest set == the gitnexus/vendor/tree-sitter-*
+        """Consistency guard: the manifest set == the mygitnexus/vendor/tree-sitter-*
         dirs. Vendoring a grammar without a manifest entry (or vice-versa) fails —
         this is what keeps the two tree-sitter workflows aligned (#858)."""
         manifest_names = {

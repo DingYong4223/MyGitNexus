@@ -20,8 +20,8 @@ from .evolution import MAX_CANDIDATE_OVERLAY_BYTES, candidate_overlay_payload
 from .process_control import run_managed
 
 # Shipped byte-identical mirrors of .claude/skills/<name> (see
-# gitnexus/test/unit/shipped-skills-sync.test.ts — the drift guard).
-MIRROR_SKILL_ROOTS = ("gitnexus/skills", "gitnexus-claude-plugin/skills")
+# mygitnexus/test/unit/shipped-skills-sync.test.ts — the drift guard).
+MIRROR_SKILL_ROOTS = ("mygitnexus/skills", "mygitnexus-claude-plugin/skills")
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 

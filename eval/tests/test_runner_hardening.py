@@ -109,7 +109,7 @@ def test_verifier_normal_nonzero_exit_remains_candidate_quality():
 
 
 def test_review_skill_fingerprint_rejects_setup_and_review_phase_replacement(tmp_path):
-    skill = tmp_path / ".claude" / "skills" / "gitnexus-review" / "SKILL.md"
+    skill = tmp_path / ".claude" / "skills" / "mygitnexus-review" / "SKILL.md"
     skill.parent.mkdir(parents=True)
     skill.write_text("trusted review prompt")
     expected = skill_fingerprint(tmp_path, "review")
@@ -300,11 +300,11 @@ def test_phase_workspace_still_rejects_a_genuinely_unauthorized_change(tmp_path)
 
 def test_phase_workspace_ignores_nested_claude_sandbox_bootstrap_noise(tmp_path):
     # Claude Code bootstraps into whatever directory it is running in, not just
-    # the workspace root. The benchmark's task prompts cd into gitnexus/, so the
+    # the workspace root. The benchmark's task prompts cd into mygitnexus/, so the
     # same noise lands one level down -- observed verbatim in skill-evolution run
     # 29861768554, where 13 of 18 sessions failed with
-    # "phase changed unauthorized workspace path(s): gitnexus/.claude/.cc-writes".
-    nested = tmp_path / "gitnexus" / ".claude"
+    # "phase changed unauthorized workspace path(s): mygitnexus/.claude/.cc-writes".
+    nested = tmp_path / "mygitnexus" / ".claude"
     nested.mkdir(parents=True)
     (nested / "settings.local.json").write_text("{}")
     before = runner_artifacts.workspace_snapshot(tmp_path)
@@ -318,7 +318,7 @@ def test_phase_workspace_ignores_nested_claude_sandbox_bootstrap_noise(tmp_path)
 def test_phase_workspace_does_not_descend_into_nested_bootstrap_directories(tmp_path):
     # The exclusion must skip an entry before it is queued for traversal, so
     # content created *inside* the ignored directory stays invisible too.
-    nested = tmp_path / "gitnexus" / ".claude" / ".cc-writes"
+    nested = tmp_path / "mygitnexus" / ".claude" / ".cc-writes"
     nested.mkdir(parents=True)
     before = runner_artifacts.workspace_snapshot(tmp_path)
     (nested / "pending.json").write_text('{"writes": 1}')
@@ -329,10 +329,10 @@ def test_phase_workspace_does_not_descend_into_nested_bootstrap_directories(tmp_
 
 
 def test_phase_workspace_still_rejects_nested_real_claude_config(tmp_path):
-    # gitnexus/.claude/settings.local.json is real tracked repository content.
+    # mygitnexus/.claude/settings.local.json is real tracked repository content.
     # Excluding ".claude" wholesale at depth would blind the check to it, so the
     # exclusion must name only the entries Claude Code itself creates.
-    nested = tmp_path / "gitnexus" / ".claude"
+    nested = tmp_path / "mygitnexus" / ".claude"
     nested.mkdir(parents=True)
     settings = nested / "settings.local.json"
     settings.write_text("{}")
@@ -347,9 +347,9 @@ def test_phase_workspace_still_rejects_nested_real_claude_config(tmp_path):
 
 def test_phase_workspace_still_rejects_nested_package_json(tmp_path):
     # package.json is in WORKSPACE_SNAPSHOT_BOOTSTRAP_NOISE, but only as a
-    # workspace-root entry: gitnexus/package.json is real tracked content whose
+    # workspace-root entry: mygitnexus/package.json is real tracked content whose
     # edits must still be caught.
-    nested = tmp_path / "gitnexus"
+    nested = tmp_path / "mygitnexus"
     nested.mkdir()
     manifest = nested / "package.json"
     manifest.write_text("{}")
@@ -365,12 +365,12 @@ def test_phase_workspace_still_rejects_nested_package_json(tmp_path):
 def test_phase_workspace_still_sees_writes_under_a_pre_existing_nested_claude_dir(tmp_path):
     # Every excluded name is a blind spot. .claude/agents and .claude/commands
     # are deliberately NOT excluded at depth: once a .claude directory exists
-    # (gitnexus/.claude/settings.local.json is tracked), anything written
+    # (mygitnexus/.claude/settings.local.json is tracked), anything written
     # underneath an excluded entry is invisible to this check, and Claude Code
     # loads .claude/agents relative to its cwd -- which these tasks point at
-    # gitnexus/. A planning phase must not be able to plant a definition there
+    # mygitnexus/. A planning phase must not be able to plant a definition there
     # for the later work phase to read.
-    nested = tmp_path / "gitnexus" / ".claude"
+    nested = tmp_path / "mygitnexus" / ".claude"
     nested.mkdir(parents=True)
     (nested / "settings.local.json").write_text("{}")
     before = runner_artifacts.workspace_snapshot(tmp_path)

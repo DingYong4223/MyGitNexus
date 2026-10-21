@@ -120,7 +120,7 @@ jobs:
           # `assert_field` validators and the agent-facing JSON block in
           # the sticky comment. Bump `schema` when changing field names.
           jq -n \
-            --arg     schema        'gitnexus.pr-autofix/v1' \
+            --arg     schema        'mygitnexus.pr-autofix/v1' \
             --argjson pr_number     "${PR_NUMBER}" \
             --arg     head_sha      "${HEAD_SHA}" \
             --arg     head_ref      "${HEAD_REF}" \

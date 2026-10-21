@@ -38,9 +38,9 @@ SANDBOX_NODE_PREFIX = "/opt/claude/nodejs"
 VITE_TEMP_DIR = ".vite-temp"
 DEPENDENCY_MOUNT_BASENAME = "node_modules"
 SANDBOX_PATH = f"/opt/claude:{SANDBOX_NODE_PREFIX}/bin:/usr/local/bin:/usr/bin:/bin"
-SANDBOX_GITNEXUS = "/opt/gitnexus"
-SANDBOX_GITNEXUS_SHARED = "/opt/gitnexus-shared"
-SANDBOX_GITNEXUS_REGISTRY = "/opt/gitnexus-registry"
+SANDBOX_MYGITNEXUS = "/opt/mygitnexus"
+SANDBOX_MYGITNEXUS_SHARED = "/opt/mygitnexus-shared"
+SANDBOX_MYGITNEXUS_REGISTRY = "/opt/mygitnexus-registry"
 SANDBOX_USER_SKILLS = f"{SANDBOX_HOME}/.claude/skills"
 
 
@@ -333,9 +333,9 @@ def build_claude_settings() -> str:
                     "/lib",
                     "/lib64",
                     "/opt/claude",
-                    SANDBOX_GITNEXUS,
-                    SANDBOX_GITNEXUS_SHARED,
-                    SANDBOX_GITNEXUS_REGISTRY,
+                    SANDBOX_MYGITNEXUS,
+                    SANDBOX_MYGITNEXUS_SHARED,
+                    SANDBOX_MYGITNEXUS_REGISTRY,
                 ],
             },
         },
@@ -388,7 +388,7 @@ def _runtime_mount_args() -> list[str]:
         # along for free -- which is exactly why this gap stayed invisible
         # until a self-hosted runner put node in actions/setup-node's tool
         # cache, outside /usr, and every task verify command
-        # ("cd gitnexus && npx tsc ... && npx vitest ...") died with
+        # ("cd mygitnexus && npx tsc ... && npx vitest ...") died with
         # "/bin/sh: 1: npx: not found". Skip the redundant bind in the
         # already-covered case so the mount surface stays minimal.
         #
@@ -696,7 +696,7 @@ def _sandbox_command_prefix(
         # already-read-only bind, so a tmpfs can only be overlaid where the
         # directory already exists in the bound bytes. task_assets.py captures
         # it into dependency-snapshot node_modules; other node_modules mounts
-        # (e.g. the trusted GitNexus runtime at /opt/gitnexus/node_modules) do
+        # (e.g. the trusted MyGitNexus runtime at /opt/mygitnexus/node_modules) do
         # not carry it, and overlaying them would fail with EROFS.
         if PurePosixPath(mount.target).name == DEPENDENCY_MOUNT_BASENAME and (mount.source / VITE_TEMP_DIR).is_dir():
             args += ["--tmpfs", f"{mount.target}/{VITE_TEMP_DIR}"]

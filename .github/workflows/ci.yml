@@ -28,9 +28,9 @@ concurrency:
 #   ci-quality.yml       — typecheck (tsc --noEmit)
 #   ci-tests.yml         — unit + integration tests with coverage + cross-platform
 #                          (includes the scope-resolution resolver tests)
-#   ci-e2e.yml           — E2E tests (only when gitnexus-web/ changes)
+#   ci-e2e.yml           — E2E tests (only when mygitnexus-web/ changes)
 #
-# Shared setup is DRY via .github/actions/setup-gitnexus composite action.
+# Shared setup is DRY via .github/actions/setup-mygitnexus composite action.
 
 jobs:
   quality:

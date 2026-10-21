@@ -33,7 +33,7 @@ def make_plugin(root: Path, *, version: str = PLUGIN_VERSION, noise: bool = Fals
                 "name": "compound-engineering",
                 "version": version,
                 "description": "Comparator canary",
-                "author": {"name": "GitNexus tests"},
+                "author": {"name": "MyGitNexus tests"},
             }
         )
     )
@@ -238,7 +238,7 @@ def test_run_claude_passes_plugin_dir_explicitly_under_bare(monkeypatch, tmp_pat
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_CLAUDE_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_CLAUDE_CANARY") != "1",
     reason="real Bubblewrap/Claude plugin canary is mandatory in the named Ubuntu CI job",
 )
 def test_real_bubblewrap_claude_strictly_validates_staged_plugin(tmp_path: Path) -> None:

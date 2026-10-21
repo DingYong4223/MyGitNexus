@@ -6,14 +6,14 @@ name: PR Autofix (publish)
 # Downloads the diff artifact produced by the untrusted job, verifies
 # its claimed PR identity against the workflow_run authority, then
 # posts (or edits) a single sticky summary comment plus a
-# `gitnexus/autofix` Check Run. This job NEVER checks out fork code —
+# `mygitnexus/autofix` Check Run. This job NEVER checks out fork code —
 # it only consumes the diff (data) and calls the GitHub API. That
 # isolation is what makes it safe to run under `pull-requests: write`
 # on fork-triggered events.
 #
 # The sticky comment is the contributor signal: heading
 # "## :sparkles: PR Autofix" in the PR's top-level comments, with a
-# fenced `gitnexus-autofix` JSON block carrying machine-readable state
+# fenced `mygitnexus-autofix` JSON block carrying machine-readable state
 # for AI agents. Contributors apply the patch by commenting `/autofix`
 # on the PR — handled by the separate `pr-autofix-apply.yml` workflow.
 
@@ -47,7 +47,7 @@ jobs:
       # Required by actions/download-artifact to fetch artifacts produced
       # by a different workflow run.
       actions: read
-      # Required to create the `gitnexus/autofix` Check Run that reports
+      # Required to create the `mygitnexus/autofix` Check Run that reports
       # the outcome (clean / fixes-available) to the PR's Checks tab.
       # Branch protection or agents can grep the conclusion + output
       # title without parsing the sticky comment.
@@ -88,7 +88,7 @@ jobs:
             printf '%s' "$value"
           }
 
-          SCHEMA=$(assert_field    schema         '^gitnexus\.pr-autofix/v[0-9]+$')
+          SCHEMA=$(assert_field    schema         '^mygitnexus\.pr-autofix/v[0-9]+$')
           PR_NUMBER=$(assert_field pr_number      '^[0-9]+$')
           HEAD_SHA=$(assert_field  head_sha       '^[0-9a-f]{40}$')
           HEAD_REF=$(assert_field  head_ref       '^[A-Za-z0-9._/-]+$')
@@ -201,7 +201,7 @@ jobs:
           set -euo pipefail
 
           # Stable heading + marker — agents grep for these exact strings.
-          marker="<!-- gitnexus:pr-autofix-summary -->"
+          marker="<!-- mygitnexus:pr-autofix-summary -->"
           heading="## :sparkles: PR Autofix"
 
           # Single state. The /autofix slash command works for any diff
@@ -213,12 +213,12 @@ jobs:
 
           # Machine-readable JSON block — agents parse this instead of
           # regexing English. Fenced code-block info string is
-          # `gitnexus-autofix` so agents can locate it without ambiguity.
+          # `mygitnexus-autofix` so agents can locate it without ambiguity.
           # Schema bumped from v1 -> v2: adds `apply_command`. The v1
           # field set is preserved as a superset, but the `state` enum
           # is redefined (v1: suggestions-posted | skipped-too-large |
           # diff-no-overlap; v2: fixes-available). v1 readers checking
-          # `schema == 'gitnexus.pr-autofix/v1'` see an unfamiliar version
+          # `schema == 'mygitnexus.pr-autofix/v1'` see an unfamiliar version
           # and fall back to prose, which is the intended migration path.
           json=$(jq -n -c \
             --arg state        "${ui_state}" \
@@ -226,7 +226,7 @@ jobs:
             --argjson changed_lines "${CHANGED}" \
             --arg head_sha     "${HEAD_SHA}" \
             --arg run_id       "${RUN_ID}" \
-            '{schema:"gitnexus.pr-autofix/v2", state:$state, pr_number:$pr_number, changed_lines:$changed_lines, head_sha:$head_sha, run_id:$run_id, apply_command:"/autofix"}')
+            '{schema:"mygitnexus.pr-autofix/v2", state:$state, pr_number:$pr_number, changed_lines:$changed_lines, head_sha:$head_sha, run_id:$run_id, apply_command:"/autofix"}')
 
           # Multi-line quoted string instead of a column-0 heredoc — YAML's
           # `run: |` block ends as soon as a content line dedents below the
@@ -236,7 +236,7 @@ jobs:
 
           ${prose}
 
-          \`\`\`gitnexus-autofix
+          \`\`\`mygitnexus-autofix
           ${json}
           \`\`\`"
           # Strip the leading 10-space indent that the YAML block requires
@@ -277,8 +277,8 @@ jobs:
             echo "Created summary comment."
           fi
 
-      - name: Emit gitnexus/autofix Check Run
-        # Stable check name `gitnexus/autofix` so PR-watching agents can
+      - name: Emit mygitnexus/autofix Check Run
+        # Stable check name `mygitnexus/autofix` so PR-watching agents can
         # `gh pr checks <pr>` and read the conclusion + title without
         # parsing the sticky comment. Two outcomes:
         #   clean            → conclusion: success
@@ -306,11 +306,11 @@ jobs:
           fi
 
           gh api -X POST "repos/${GH_REPO}/check-runs" \
-            -f name="gitnexus/autofix" \
+            -f name="mygitnexus/autofix" \
             -f head_sha="${HEAD_SHA}" \
             -f status="completed" \
             -f conclusion="${conclusion}" \
             -f "output[title]=${title}" \
             -f "output[summary]=${summary}" \
             >/dev/null
-          echo "Posted check-run gitnexus/autofix=${conclusion} (${title})"
+          echo "Posted check-run mygitnexus/autofix=${conclusion} (${title})"

@@ -298,11 +298,11 @@ def test_agent_tool_grants_are_exact_and_nomcp_has_no_graph_tools(monkeypatch, t
     implementation = runner.allowed_agent_tools(implementation=True)
     no_mcp = runner.allowed_agent_tools(implementation=True, include_mcp=False)
 
-    assert read_only == [*runner.BUILTIN_AGENT_TOOLS, *runner.GITNEXUS_READ_ONLY_TOOLS]
+    assert read_only == [*runner.BUILTIN_AGENT_TOOLS, *runner.MYGITNEXUS_READ_ONLY_TOOLS]
     assert implementation == [
         *runner.BUILTIN_AGENT_TOOLS,
-        *runner.GITNEXUS_READ_ONLY_TOOLS,
-        *runner.GITNEXUS_MUTATING_TOOLS,
+        *runner.MYGITNEXUS_READ_ONLY_TOOLS,
+        *runner.MYGITNEXUS_MUTATING_TOOLS,
     ]
     assert no_mcp == list(runner.BUILTIN_AGENT_TOOLS)
     assert not any(tool.startswith("mcp__") for tool in no_mcp)
@@ -330,7 +330,7 @@ def test_agent_tool_grants_are_exact_and_nomcp_has_no_graph_tools(monkeypatch, t
     assert captured[2]["allowed_tools"] == implementation
     assert captured[3]["allowed_tools"] == list(runner.BUILTIN_AGENT_TOOLS)
     assert captured[3]["mcp_config_json"] == '{"mcpServers":{}}'
-    assert captured[3]["disallowed_tools"] == ["Skill", "mcp__gitnexus"]
+    assert captured[3]["disallowed_tools"] == ["Skill", "mcp__mygitnexus"]
 
     # --bare hard-disables the Skill tool and every mcp__* tool regardless of
     # --allowedTools (a Claude Code design choice, not something the harness
@@ -343,8 +343,8 @@ def test_agent_tool_grants_are_exact_and_nomcp_has_no_graph_tools(monkeypatch, t
 
 
 def test_mcp_config_uses_only_the_minimal_pinned_harness_runtime(monkeypatch, tmp_path):
-    runtime = tmp_path / "gitnexus"
-    shared = tmp_path / "gitnexus-shared"
+    runtime = tmp_path / "mygitnexus"
+    shared = tmp_path / "mygitnexus-shared"
     for directory in (
         runtime / "dist" / "cli",
         runtime / "node_modules",
@@ -355,74 +355,74 @@ def test_mcp_config_uses_only_the_minimal_pinned_harness_runtime(monkeypatch, tm
         directory.mkdir(parents=True)
     (runtime / "dist" / "cli" / "index.js").write_text("")
     (runtime / "hooks" / "claude" / "resolve-analyze-cmd.cjs").write_text("")
-    (runtime / "package.json").write_text(json.dumps({"version": runner.PINNED_GITNEXUS_VERSION}))
-    (runtime / "node_modules" / "gitnexus-shared").symlink_to(shared, target_is_directory=True)
-    (shared / "package.json").write_text(json.dumps({"name": "gitnexus-shared"}))
+    (runtime / "package.json").write_text(json.dumps({"version": runner.PINNED_MYGITNEXUS_VERSION}))
+    (runtime / "node_modules" / "mygitnexus-shared").symlink_to(shared, target_is_directory=True)
+    (shared / "package.json").write_text(json.dumps({"name": "mygitnexus-shared"}))
     monkeypatch.setattr(runtime_mounts, "HARNESS_ROOT", tmp_path)
 
     config = json.loads(runner.sandbox_mcp_config())
-    server = config["mcpServers"]["gitnexus"]
+    server = config["mcpServers"]["mygitnexus"]
     command_line = [server["command"], *server["args"]]
 
-    assert runner.SANDBOX_GITNEXUS_ENTRYPOINT in command_line
+    assert runner.SANDBOX_MYGITNEXUS_ENTRYPOINT in command_line
     assert not any(value.startswith("/workspace/") for value in command_line)
-    assert f"GITNEXUS_HOME={runner.SANDBOX_GITNEXUS_REGISTRY}" in command_line
-    assert "GITNEXUS_MCP_ALLOWED_REPOS=/workspace" in command_line
-    assert "GITNEXUS_MCP_DEFAULT_REPO=/workspace" in command_line
-    mounts = runner.trusted_gitnexus_runtime_mounts()
+    assert f"MYGITNEXUS_HOME={runner.SANDBOX_MYGITNEXUS_REGISTRY}" in command_line
+    assert "MYGITNEXUS_MCP_ALLOWED_REPOS=/workspace" in command_line
+    assert "MYGITNEXUS_MCP_DEFAULT_REPO=/workspace" in command_line
+    mounts = runner.trusted_mygitnexus_runtime_mounts()
     assert [(mount.source, mount.target) for mount in mounts] == [
-        (runtime / "dist", f"{runner.SANDBOX_GITNEXUS}/dist"),
-        (runtime / "package.json", f"{runner.SANDBOX_GITNEXUS}/package.json"),
-        (runtime / "node_modules", f"{runner.SANDBOX_GITNEXUS}/node_modules"),
-        (runtime / "vendor", f"{runner.SANDBOX_GITNEXUS}/vendor"),
-        (shared / "dist", f"{runner.SANDBOX_GITNEXUS_SHARED}/dist"),
-        (shared / "package.json", f"{runner.SANDBOX_GITNEXUS_SHARED}/package.json"),
-        (runtime / "hooks" / "claude", f"{runner.SANDBOX_GITNEXUS}/hooks/claude"),
+        (runtime / "dist", f"{runner.SANDBOX_MYGITNEXUS}/dist"),
+        (runtime / "package.json", f"{runner.SANDBOX_MYGITNEXUS}/package.json"),
+        (runtime / "node_modules", f"{runner.SANDBOX_MYGITNEXUS}/node_modules"),
+        (runtime / "vendor", f"{runner.SANDBOX_MYGITNEXUS}/vendor"),
+        (shared / "dist", f"{runner.SANDBOX_MYGITNEXUS_SHARED}/dist"),
+        (shared / "package.json", f"{runner.SANDBOX_MYGITNEXUS_SHARED}/package.json"),
+        (runtime / "hooks" / "claude", f"{runner.SANDBOX_MYGITNEXUS}/hooks/claude"),
     ]
     package = json.loads((runtime / "package.json").read_text())
-    assert package["version"] == runner.PINNED_GITNEXUS_VERSION
+    assert package["version"] == runner.PINNED_MYGITNEXUS_VERSION
 
     mounted_sources = {mount.source for mount in mounts}
     mounted_targets = {mount.target for mount in mounts}
     assert runtime not in mounted_sources
     assert shared not in mounted_sources
-    for forbidden in (".env", ".env.example", ".npmrc", ".git", ".gitnexus", "src", "test", "tests", "skills"):
+    for forbidden in (".env", ".env.example", ".npmrc", ".git", ".mygitnexus", "src", "test", "tests", "skills"):
         assert runtime / forbidden not in mounted_sources
-        assert f"{runner.SANDBOX_GITNEXUS}/{forbidden}" not in mounted_targets
+        assert f"{runner.SANDBOX_MYGITNEXUS}/{forbidden}" not in mounted_targets
         assert shared / forbidden not in mounted_sources
-        assert f"{runner.SANDBOX_GITNEXUS_SHARED}/{forbidden}" not in mounted_targets
+        assert f"{runner.SANDBOX_MYGITNEXUS_SHARED}/{forbidden}" not in mounted_targets
 
     # Only hooks/claude is exposed, not the whole hooks/ directory (which also
     # has an unrelated hooks/antigravity/ tree) and not the runtime root itself.
     assert runtime / "hooks" not in mounted_sources
     assert runtime / "hooks" / "antigravity" not in mounted_sources
-    assert f"{runner.SANDBOX_GITNEXUS}/hooks" not in mounted_targets
+    assert f"{runner.SANDBOX_MYGITNEXUS}/hooks" not in mounted_targets
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
     reason="real Bubblewrap canary is mandatory in the named Ubuntu CI job",
 )
 def test_real_bubblewrap_runtime_mount_imports_cli_without_exposing_checkout(tmp_path):
     clone = tmp_path / "clone"
     clone.mkdir()
-    mounts = runner.trusted_gitnexus_runtime_mounts()
+    mounts = runner.trusted_mygitnexus_runtime_mounts()
 
     required = [
-        runner.SANDBOX_GITNEXUS_ENTRYPOINT,
-        f"{runner.SANDBOX_GITNEXUS}/package.json",
-        f"{runner.SANDBOX_GITNEXUS}/node_modules",
-        f"{runner.SANDBOX_GITNEXUS}/vendor",
-        f"{runner.SANDBOX_GITNEXUS_SHARED}/dist/index.js",
-        f"{runner.SANDBOX_GITNEXUS_SHARED}/package.json",
-        f"{runner.SANDBOX_GITNEXUS}/hooks/claude/resolve-analyze-cmd.cjs",
+        runner.SANDBOX_MYGITNEXUS_ENTRYPOINT,
+        f"{runner.SANDBOX_MYGITNEXUS}/package.json",
+        f"{runner.SANDBOX_MYGITNEXUS}/node_modules",
+        f"{runner.SANDBOX_MYGITNEXUS}/vendor",
+        f"{runner.SANDBOX_MYGITNEXUS_SHARED}/dist/index.js",
+        f"{runner.SANDBOX_MYGITNEXUS_SHARED}/package.json",
+        f"{runner.SANDBOX_MYGITNEXUS}/hooks/claude/resolve-analyze-cmd.cjs",
     ]
     forbidden = [
-        f"{runner.SANDBOX_GITNEXUS}/{relative}"
-        for relative in (".env", ".env.example", ".npmrc", ".git", ".gitnexus", "src", "test", "tests", "skills")
+        f"{runner.SANDBOX_MYGITNEXUS}/{relative}"
+        for relative in (".env", ".env.example", ".npmrc", ".git", ".mygitnexus", "src", "test", "tests", "skills")
     ] + [
-        f"{runner.SANDBOX_GITNEXUS_SHARED}/{relative}"
-        for relative in (".env", ".env.example", ".npmrc", ".git", ".gitnexus", "src", "test", "tests", "skills")
+        f"{runner.SANDBOX_MYGITNEXUS_SHARED}/{relative}"
+        for relative in (".env", ".env.example", ".npmrc", ".git", ".mygitnexus", "src", "test", "tests", "skills")
     ]
     visibility_script = (
         "const fs=require('fs');"
@@ -442,7 +442,7 @@ def test_real_bubblewrap_runtime_mount_imports_cli_without_exposing_checkout(tmp
             timeout=10,
         )
         imported = sandbox.run(
-            [runner.SANDBOX_NODE, runner.SANDBOX_GITNEXUS_ENTRYPOINT, "--version"],
+            [runner.SANDBOX_NODE, runner.SANDBOX_MYGITNEXUS_ENTRYPOINT, "--version"],
             timeout=10,
         )
         # --version never reaches the `analyze` command, which is loaded via a
@@ -451,19 +451,19 @@ def test_real_bubblewrap_runtime_mount_imports_cli_without_exposing_checkout(tmp
         # resolve-analyze-cmd.cjs. Require the compiled analyze module
         # directly so this canary actually exercises that chain.
         analyze_imported = sandbox.run(
-            [runner.SANDBOX_NODE, "-e", f"require('{runner.SANDBOX_GITNEXUS}/dist/cli/analyze.js')"],
+            [runner.SANDBOX_NODE, "-e", f"require('{runner.SANDBOX_MYGITNEXUS}/dist/cli/analyze.js')"],
             timeout=10,
         )
 
     assert visibility.ok, visibility.stderr_tail
     assert imported.ok, imported.stderr_tail
     assert analyze_imported.ok, analyze_imported.stderr_tail
-    assert imported.stdout_tail.strip() == runner.PINNED_GITNEXUS_VERSION
+    assert imported.stdout_tail.strip() == runner.PINNED_MYGITNEXUS_VERSION
 
 
 def test_isolated_mcp_registry_contains_only_the_sandbox_clone(tmp_path):
     worktree = tmp_path / "clone"
-    metadata = worktree / ".gitnexus" / "gitnexus.json"
+    metadata = worktree / ".mygitnexus" / "mygitnexus.json"
     metadata.parent.mkdir(parents=True)
     metadata.write_text(
         json.dumps(
@@ -475,11 +475,11 @@ def test_isolated_mcp_registry_contains_only_the_sandbox_clone(tmp_path):
         )
     )
 
-    mount = runner.isolated_gitnexus_registry_mount(worktree, tmp_path)
+    mount = runner.isolated_mygitnexus_registry_mount(worktree, tmp_path)
     registry_file = mount.source / "registry.json"
     registry = json.loads(registry_file.read_text())
 
-    assert mount.target == runner.SANDBOX_GITNEXUS_REGISTRY
+    assert mount.target == runner.SANDBOX_MYGITNEXUS_REGISTRY
     assert mount.source.stat().st_mode & 0o777 == 0o700
     assert registry_file.stat().st_mode & 0o777 == 0o600
     assert registry == [
@@ -489,7 +489,7 @@ def test_isolated_mcp_registry_contains_only_the_sandbox_clone(tmp_path):
             "name": "benchmark-target",
             "path": "/workspace",
             "stats": {"files": 1},
-            "storagePath": "/workspace/.gitnexus",
+            "storagePath": "/workspace/.mygitnexus",
         }
     ]
 
@@ -607,7 +607,7 @@ def test_workflow_never_starts_work_after_failed_or_invalid_planning(monkeypatch
 
 
 def test_skill_invocation_is_detected_from_parent_event_stream(monkeypatch, tmp_path):
-    stream = event_stream(*skill_events({"command": "gitnexus-work"}))
+    stream = event_stream(*skill_events({"command": "mygitnexus-work"}))
     monkeypatch.setattr(runner_sessions, "run_managed", lambda *a, **k: fake_cli_result(stream))
 
     rec = runner.run_claude(
@@ -615,7 +615,7 @@ def test_skill_invocation_is_detected_from_parent_event_stream(monkeypatch, tmp_
         tmp_path,
         claude_bin="claude",
         timeout=5,
-        expected_skill="gitnexus-work",
+        expected_skill="mygitnexus-work",
     )
 
     assert rec["ok"] is True
@@ -626,16 +626,16 @@ def test_skill_invocation_is_detected_from_parent_event_stream(monkeypatch, tmp_
 @pytest.mark.parametrize(
     "skill_input",
     [
-        {"skill": "gitnexus-work"},
-        {"command": "/gitnexus-work execute the plan"},
-        {"name": "gitnexus-work direct-mode"},
+        {"skill": "mygitnexus-work"},
+        {"command": "/mygitnexus-work execute the plan"},
+        {"name": "mygitnexus-work direct-mode"},
     ],
 )
 def test_skill_invocation_parses_supported_exact_identifier_fields(skill_input):
     assert (
         runner_sessions.skill_was_invoked_events(
             skill_events(skill_input),
-            "gitnexus-work",
+            "mygitnexus-work",
         )
         is True
     )
@@ -644,26 +644,26 @@ def test_skill_invocation_parses_supported_exact_identifier_fields(skill_input):
 @pytest.mark.parametrize(
     "skill_input",
     [
-        {"skill": "gitnexus-work-extra"},
-        {"skill": "prefix-gitnexus-work"},
-        {"command": "/gitnexus-work-extra execute"},
-        {"command": "other-skill", "args": "please use gitnexus-work"},
-        {"name": "other-skill", "description": "gitnexus-work"},
-        {"args": "gitnexus-work"},
+        {"skill": "mygitnexus-work-extra"},
+        {"skill": "prefix-mygitnexus-work"},
+        {"command": "/mygitnexus-work-extra execute"},
+        {"command": "other-skill", "args": "please use mygitnexus-work"},
+        {"name": "other-skill", "description": "mygitnexus-work"},
+        {"args": "mygitnexus-work"},
     ],
 )
 def test_skill_invocation_rejects_prefix_suffix_and_argument_mentions(skill_input):
     assert (
         runner_sessions.skill_was_invoked_events(
             skill_events(skill_input),
-            "gitnexus-work",
+            "mygitnexus-work",
         )
         is False
     )
 
 
 def test_skill_invocation_scans_through_eof_and_rejects_later_malformed_json(monkeypatch, tmp_path):
-    stream = event_stream(*skill_events({"skill": "gitnexus-work"})) + '{"truncated":'
+    stream = event_stream(*skill_events({"skill": "mygitnexus-work"})) + '{"truncated":'
     monkeypatch.setattr(runner_sessions, "run_managed", lambda *a, **k: fake_cli_result(stream))
 
     rec = runner.run_claude(
@@ -671,7 +671,7 @@ def test_skill_invocation_scans_through_eof_and_rejects_later_malformed_json(mon
         tmp_path,
         claude_bin="claude",
         timeout=5,
-        expected_skill="gitnexus-work",
+        expected_skill="mygitnexus-work",
     )
 
     assert rec["ok"] is False
@@ -680,26 +680,26 @@ def test_skill_invocation_scans_through_eof_and_rejects_later_malformed_json(mon
 
 
 def test_matching_skill_requires_one_later_successful_result(monkeypatch, tmp_path):
-    failed_stream = event_stream(*skill_events({"skill": "gitnexus-work"}, is_error=True))
+    failed_stream = event_stream(*skill_events({"skill": "mygitnexus-work"}, is_error=True))
     monkeypatch.setattr(runner_sessions, "run_managed", lambda *a, **k: fake_cli_result(failed_stream))
     failed = runner.run_claude(
         "task",
         tmp_path,
         claude_bin="claude",
         timeout=5,
-        expected_skill="gitnexus-work",
+        expected_skill="mygitnexus-work",
     )
     assert failed["skill_invoked"] is False
     assert failed["error_kind"] == "skill-not-invoked"
 
-    missing_result = event_stream(skill_events({"skill": "gitnexus-work"})[0])
+    missing_result = event_stream(skill_events({"skill": "mygitnexus-work"})[0])
     monkeypatch.setattr(runner_sessions, "run_managed", lambda *a, **k: fake_cli_result(missing_result))
     missing = runner.run_claude(
         "task",
         tmp_path,
         claude_bin="claude",
         timeout=5,
-        expected_skill="gitnexus-work",
+        expected_skill="mygitnexus-work",
     )
     assert missing["skill_invoked"] is None
     assert missing["error_kind"] == "evidence-unverified"
@@ -707,12 +707,12 @@ def test_matching_skill_requires_one_later_successful_result(monkeypatch, tmp_pa
 
 
 def test_skill_evidence_rejects_duplicate_tool_use_and_result_ids():
-    request, result = skill_events({"skill": "gitnexus-work"})
+    request, result = skill_events({"skill": "mygitnexus-work"})
     duplicate_request = json.loads(json.dumps(request))
     with pytest.raises(ValueError, match="duplicate tool-use id"):
         runner_sessions.skill_was_invoked_events(
             [request, duplicate_request, result],
-            "gitnexus-work",
+            "mygitnexus-work",
         )
 
     error_result = json.loads(json.dumps(result))
@@ -720,14 +720,14 @@ def test_skill_evidence_rejects_duplicate_tool_use_and_result_ids():
     with pytest.raises(ValueError, match="duplicate tool result"):
         runner_sessions.skill_was_invoked_events(
             [request, result, error_result],
-            "gitnexus-work",
+            "mygitnexus-work",
         )
 
 
 def test_agent_writable_home_transcript_cannot_forge_skill_evidence(monkeypatch, tmp_path):
     forged = tmp_path / ".claude" / "projects" / "forged" / "s.jsonl"
     forged.parent.mkdir(parents=True)
-    forged.write_text(event_stream(*skill_events({"skill": "gitnexus-work"})))
+    forged.write_text(event_stream(*skill_events({"skill": "mygitnexus-work"})))
     monkeypatch.setattr(runner_sessions, "run_managed", lambda *a, **k: fake_cli_result(VALID_REPORT))
 
     rec = runner.run_claude(
@@ -735,7 +735,7 @@ def test_agent_writable_home_transcript_cannot_forge_skill_evidence(monkeypatch,
         tmp_path,
         claude_bin="claude",
         timeout=5,
-        expected_skill="gitnexus-work",
+        expected_skill="mygitnexus-work",
         transcript_projects=tmp_path / ".claude" / "projects",
     )
 
@@ -784,7 +784,7 @@ def test_every_skill_implementation_session_rechecks_fingerprint_immediately(
 
 
 def test_direct_implementation_skill_mutation_fails_before_verification(monkeypatch, tmp_path):
-    skill = tmp_path / ".claude" / "skills" / "gitnexus-work" / "SKILL.md"
+    skill = tmp_path / ".claude" / "skills" / "mygitnexus-work" / "SKILL.md"
     skill.parent.mkdir(parents=True)
     skill.write_text("trusted prompt")
     expected = skill_fingerprint(tmp_path, "workflow_direct")
@@ -827,7 +827,7 @@ def test_parent_event_stream_is_persisted_private_redacted_and_digest_bound(monk
     bearer = "Authorization: Bearer bearer-postmortem-secret"
     structural_secret = "token-in-authorization-value"
     password = "password-in-structured-field"
-    events = skill_events({"command": "gitnexus-work"})
+    events = skill_events({"command": "mygitnexus-work"})
     events.insert(
         1,
         {
@@ -869,7 +869,7 @@ def test_parent_event_stream_is_persisted_private_redacted_and_digest_bound(monk
         tmp_path,
         claude_bin="claude",
         timeout=5,
-        expected_skill="gitnexus-work",
+        expected_skill="mygitnexus-work",
         transcript_output_dir=output,
         transcript_output_prefix="task-workflow-run0",
         transcript_secrets=(secret,),
@@ -927,7 +927,7 @@ def test_missing_skill_invocation_fails_closed(monkeypatch, tmp_path):
         "run_managed",
         lambda *a, **k: fake_cli_result(event_stream(*read_events)),
     )
-    rec = runner.run_claude("task", tmp_path, claude_bin="claude", timeout=5, expected_skill="gitnexus-work")
+    rec = runner.run_claude("task", tmp_path, claude_bin="claude", timeout=5, expected_skill="mygitnexus-work")
     assert rec["ok"] is False
     assert rec["skill_invoked"] is False
     assert rec["error_kind"] == "skill-not-invoked"
@@ -944,7 +944,7 @@ def test_overflowed_parent_capture_is_ineligible_evidence(monkeypatch, tmp_path)
         tmp_path,
         claude_bin="claude",
         timeout=5,
-        expected_skill="gitnexus-work",
+        expected_skill="mygitnexus-work",
     )
     assert rec["ok"] is False
     assert rec["skill_invoked"] is None
@@ -1004,19 +1004,19 @@ def test_plan_output_rejects_unchanged_deleted_and_symlink_paths(tmp_path):
 
 
 def test_setup_skill_fingerprint_change_fails_closed(tmp_path):
-    for skill in ("gitnexus-plan", "gitnexus-work"):
+    for skill in ("mygitnexus-plan", "mygitnexus-work"):
         path = tmp_path / ".claude" / "skills" / skill / "SKILL.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"{skill} original")
     expected = skill_fingerprint(tmp_path, "workflow")
-    (tmp_path / ".claude" / "skills" / "gitnexus-plan" / "SKILL.md").write_text("replaced by setup")
+    (tmp_path / ".claude" / "skills" / "mygitnexus-plan" / "SKILL.md").write_text("replaced by setup")
 
     with pytest.raises(ValueError, match="task setup changed the evaluated skill fingerprint"):
         runner.require_skill_fingerprint(tmp_path, "workflow", expected, phase="task setup")
 
 
 def test_planning_cannot_change_source_tests_or_downstream_skill(monkeypatch, tmp_path):
-    for skill in ("gitnexus-plan", "gitnexus-work"):
+    for skill in ("mygitnexus-plan", "mygitnexus-work"):
         path = tmp_path / ".claude" / "skills" / skill / "SKILL.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"{skill} original")
@@ -1031,7 +1031,7 @@ def test_planning_cannot_change_source_tests_or_downstream_skill(monkeypatch, tm
         plans.mkdir(parents=True)
         (plans / "authorized.md").write_text("plan")
         source.write_text("pre-implemented by planning")
-        (tmp_path / ".claude" / "skills" / "gitnexus-work" / "SKILL.md").write_text("weakened")
+        (tmp_path / ".claude" / "skills" / "mygitnexus-work" / "SKILL.md").write_text("weakened")
         return session_record()
 
     monkeypatch.setattr(runner, "run_claude", adversarial_plan)

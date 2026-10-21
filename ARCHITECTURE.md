@@ -1,28 +1,28 @@
-# Architecture — GitNexus
+# Architecture — MyGitNexus
 
-Monorepo: **CLI/MCP** (`gitnexus/`) + **browser UI** (`gitnexus-web/`).
+Monorepo: **CLI/MCP** (`mygitnexus/`) + **browser UI** (`mygitnexus-web/`).
 
 ## Repository layout
 
 | Path                                                                  | Role                                                                                                        |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `gitnexus/`                                                           | npm package `gitnexus`: CLI, MCP server (stdio), HTTP API, ingestion pipeline, LadybugDB graph, embeddings. |
-| `gitnexus-web/`                                                       | Vite + React thin client: graph explorer + AI chat. All queries via `gitnexus serve` HTTP API.              |
-| `gitnexus-shared/`                                                    | Shared TypeScript types and constants (consumed by CLI and Web).                                            |
-| `.claude/`, `gitnexus-claude-plugin/`, `gitnexus-cursor-integration/` | Agent skills and plugin metadata.                                                                           |
+| `mygitnexus/`                                                           | npm package `mygitnexus`: CLI, MCP server (stdio), HTTP API, ingestion pipeline, LadybugDB graph, embeddings. |
+| `mygitnexus-web/`                                                       | Vite + React thin client: graph explorer + AI chat. All queries via `mygitnexus serve` HTTP API.              |
+| `mygitnexus-shared/`                                                    | Shared TypeScript types and constants (consumed by CLI and Web).                                            |
+| `.claude/`, `mygitnexus-claude-plugin/`, `mygitnexus-cursor-integration/` | Agent skills and plugin metadata.                                                                           |
 | `eval/`                                                               | Evaluation harnesses for benchmarking tool usage.                                                           |
-| `.github/`                                                            | CI workflows + composite actions (`setup-gitnexus/`, `setup-gitnexus-web/`).                                |
+| `.github/`                                                            | CI workflows + composite actions (`setup-mygitnexus/`, `setup-mygitnexus-web/`).                                |
 
 ## End-to-end flow: index → graph → tools
 
-1. **Ingestion** — `analyze.ts` → `runFullAnalysis` (`run-analyze.ts`) → `runPipelineFromRepo` (`pipeline.ts`). The default DAG of 19 phases builds a `KnowledgeGraph` in memory, then loads into LadybugDB under `.gitnexus/`. Repo registered in `~/.gitnexus/registry.json` for MCP discovery.
+1. **Ingestion** — `analyze.ts` → `runFullAnalysis` (`run-analyze.ts`) → `runPipelineFromRepo` (`pipeline.ts`). The default DAG of 19 phases builds a `KnowledgeGraph` in memory, then loads into LadybugDB under `.mygitnexus/`. Repo registered in `~/.mygitnexus/registry.json` for MCP discovery.
 
 2. **Persistence** — `repo-manager.ts` (paths, registry, LadybugDB cleanup). `lbug-adapter.ts` (graph load, queries, embedding batches).
 
 3. **Query layer** — three interfaces to the same backend:
    - **MCP (stdio):** `mcp.ts` → `LocalBackend` → tools (`tools.ts`) + resources (`resources.ts`)
    - **HTTP bridge:** `serve.ts` → Express (`api.ts`, `mcp-http.ts`) for web UI
-   - **CLI direct:** `gitnexus query|context|impact|cypher` in `tool.ts`
+   - **CLI direct:** `mygitnexus query|context|impact|cypher` in `tool.ts`
 
 4. **Staleness** — `staleness.ts` compares indexed `lastCommit` to `HEAD`, surfaces hints.
 
@@ -47,14 +47,14 @@ Monorepo: **CLI/MCP** (`gitnexus/`) + **browser UI** (`gitnexus-web/`).
 | `group_list`     | List repo groups or details for one group                                                                                      |
 | `group_sync`     | Rebuild group Contract Registry (`contracts.json`) and bridge graph                                                            |
 
-`query`, `context`, and `impact` are group-aware: pass `repo: "@<groupName>"` (or `"@<groupName>/<memberPath>"` to scope to one member) plus optional `service: "<monorepo/path>"`. Group-mode `query` merges per-repo results via Reciprocal Rank Fusion; group-mode `impact` runs the local walk in the chosen member and fans out across boundaries via the Contract Bridge (`gitnexus/src/core/group/cross-impact.ts`). `trace` is also group-aware via `repo: "@<groupName>"` — but, unlike the others, it resolves `from`/`to` across **all** members (a `@<groupName>/<memberPath>` suffix is advisory for trace, not a scope); pass `from_uid`/`to_uid` to disambiguate a symbol name that occurs in more than one member.
+`query`, `context`, and `impact` are group-aware: pass `repo: "@<groupName>"` (or `"@<groupName>/<memberPath>"` to scope to one member) plus optional `service: "<monorepo/path>"`. Group-mode `query` merges per-repo results via Reciprocal Rank Fusion; group-mode `impact` runs the local walk in the chosen member and fans out across boundaries via the Contract Bridge (`mygitnexus/src/core/group/cross-impact.ts`). `trace` is also group-aware via `repo: "@<groupName>"` — but, unlike the others, it resolves `from`/`to` across **all** members (a `@<groupName>/<memberPath>` suffix is advisory for trace, not a scope); pass `from_uid`/`to_uid` to disambiguate a symbol name that occurs in more than one member.
 
-Group-mode `trace` (`gitnexus/src/core/group/cross-trace.ts`) stitches a path that crosses repositories: it resolves `from`/`to` across all members, and when they live in different repos it joins the home-repo segment to the target-repo segment over a single `ContractLink` boundary (an HTTP consumer→provider link, joined on `Contract.symbolUid`), reported as a `CONTRACT_LINK` hop in `crossings[]`. The crossing is clamped to one boundary (`MAX_SUPPORTED_CROSS_DEPTH`, shared with cross-impact); deeper `crossDepth` is reported via `notes[]`. With `pdg: true` (experimental, opt-in), each boundary-adjacent segment is enriched with its intra-procedural REACHING_DEF data-flow when that repo was indexed with `--pdg` (reusing the same anchored `flows` query as `pdg_query`); data flow never crosses the repo boundary, and a missing PDG layer degrades to call-level hops with a note. Two stores meet only at the `symbolUid` grain — the per-repo PDG/call graph and the group bridge — so this is the documented join; full cross-program (SDG-like) data flow across the boundary remains deferred (see `docs/plans/2026-06-18-002-feat-unified-pdg-impact-evaluation-plan.md`). The previously-planned `group_query`, `group_context`, `group_impact`, `group_contracts`, `group_status` MCP tools are intentionally not introduced — group-level state is exposed via resources instead:
+Group-mode `trace` (`mygitnexus/src/core/group/cross-trace.ts`) stitches a path that crosses repositories: it resolves `from`/`to` across all members, and when they live in different repos it joins the home-repo segment to the target-repo segment over a single `ContractLink` boundary (an HTTP consumer→provider link, joined on `Contract.symbolUid`), reported as a `CONTRACT_LINK` hop in `crossings[]`. The crossing is clamped to one boundary (`MAX_SUPPORTED_CROSS_DEPTH`, shared with cross-impact); deeper `crossDepth` is reported via `notes[]`. With `pdg: true` (experimental, opt-in), each boundary-adjacent segment is enriched with its intra-procedural REACHING_DEF data-flow when that repo was indexed with `--pdg` (reusing the same anchored `flows` query as `pdg_query`); data flow never crosses the repo boundary, and a missing PDG layer degrades to call-level hops with a note. Two stores meet only at the `symbolUid` grain — the per-repo PDG/call graph and the group bridge — so this is the documented join; full cross-program (SDG-like) data flow across the boundary remains deferred (see `docs/plans/2026-06-18-002-feat-unified-pdg-impact-evaluation-plan.md`). The previously-planned `group_query`, `group_context`, `group_impact`, `group_contracts`, `group_status` MCP tools are intentionally not introduced — group-level state is exposed via resources instead:
 
 | Resource URI                        | Purpose                                                  |
 | ----------------------------------- | -------------------------------------------------------- |
-| `gitnexus://group/{name}/contracts` | Contract Registry (provider/consumer rows + cross-links) |
-| `gitnexus://group/{name}/status`    | Per-member index + Contract Registry staleness           |
+| `mygitnexus://group/{name}/contracts` | Contract Registry (provider/consumer rows + cross-links) |
+| `mygitnexus://group/{name}/status`    | Per-member index + Contract Registry staleness           |
 
 ## Where to change what
 
@@ -68,21 +68,21 @@ Group-mode `trace` (`gitnexus/src/core/group/cross-trace.ts`) stitches a path th
 | Search ranking                                          | `src/core/search/` (BM25, hybrid fusion)                                                               |
 | Embeddings                                              | `src/core/embeddings/` + `src/core/run-analyze.ts`                                                     |
 | Wiki generation                                         | `src/core/wiki/`                                                                                       |
-| Language support                                        | `src/core/ingestion/languages/` + `tree-sitter-queries.ts` + `gitnexus-shared/src/languages.ts`        |
+| Language support                                        | `src/core/ingestion/languages/` + `tree-sitter-queries.ts` + `mygitnexus-shared/src/languages.ts`        |
 | Import resolution                                       | `src/core/ingestion/import-processor.ts` + `import-resolvers/configs/` + `model/resolution-context.ts` |
 | Call resolution/inheritance/MRO                         | `src/core/ingestion/scope-resolution/` (pipeline, passes, graph-bridge)                                |
 | Type extraction                                         | `src/core/ingestion/type-extractors/`                                                                  |
 | Worker pool                                             | `src/core/ingestion/workers/`                                                                          |
-| Web UI                                                  | `gitnexus-web/src/`                                                                                    |
+| Web UI                                                  | `mygitnexus-web/src/`                                                                                    |
 | CI                                                      | `.github/workflows/*.yml`, `.github/actions/`                                                          |
 
-> Paths above are relative to `gitnexus/` unless they start with `gitnexus-web/` or `.github/`.
+> Paths above are relative to `mygitnexus/` unless they start with `mygitnexus-web/` or `.github/`.
 
 ---
 
 ## Pipeline Phase DAG
 
-19 default phases are defined in `gitnexus/src/core/ingestion/pipeline-phases/`, each with explicit `deps` and typed output. `--pdg` adds `taintSummaries` and `callSummaries` (21 total).
+19 default phases are defined in `mygitnexus/src/core/ingestion/pipeline-phases/`, each with explicit `deps` and typed output. `--pdg` adds `taintSummaries` and `callSummaries` (21 total).
 
 ```
 scan → structure → [springConfig, markdown, cobol] → parse → [routes, tools, orm]
@@ -133,8 +133,8 @@ scan → structure → [springConfig, markdown, cobol] → parse → [routes, to
 - **Single graph accumulator** — all phases mutate the same `KnowledgeGraph` in `ctx`; the graph is the primary output.
 - **Typed phase access** — `getPhaseOutput<T>(deps, 'name')` for type-safe upstream results.
 - **Binding accumulator lifecycle** — created in `parse`, disposed by `crossFile` (in `finally`). No other phase should take ownership.
-- **Skippable phases** — `skipGraphPhases` omits MRO/di/communities/processes (faster tests); `pruneLocalSymbols` still runs (it is graph cleanup, not analysis). `skipWorkers` is no longer a sequential escape hatch — it (like `--workers 0` / `GITNEXUS_WORKER_POOL_SIZE=0`) is rejected with an actionable error, since the worker pool is the sole parse path (§ Chunked parse-and-resolve).
-- **Local-symbol pruning** — `pruneLocalSymbols` removes inert block-local value symbols after scope resolution has consumed them. Opt out per-call with `PipelineOptions.keepLocalValueSymbols` or globally with the `GITNEXUS_KEEP_LOCAL_VALUE_SYMBOLS` env var.
+- **Skippable phases** — `skipGraphPhases` omits MRO/di/communities/processes (faster tests); `pruneLocalSymbols` still runs (it is graph cleanup, not analysis). `skipWorkers` is no longer a sequential escape hatch — it (like `--workers 0` / `MYGITNEXUS_WORKER_POOL_SIZE=0`) is rejected with an actionable error, since the worker pool is the sole parse path (§ Chunked parse-and-resolve).
+- **Local-symbol pruning** — `pruneLocalSymbols` removes inert block-local value symbols after scope resolution has consumed them. Opt out per-call with `PipelineOptions.keepLocalValueSymbols` or globally with the `MYGITNEXUS_KEEP_LOCAL_VALUE_SYMBOLS` env var.
 
 ### How to add a new phase
 
@@ -168,9 +168,9 @@ export const myPhase: PipelinePhase<MyPhaseOutput> = {
 
 ## Semantic model
 
-`SemanticModel` (`gitnexus/src/core/ingestion/model/semantic-model.ts`) is the authoritative store for every symbol-indexed lookup (by `nodeId`, `simpleName`, `qualifiedName`, or `filePath`). The scope-resolution pipeline reads from here: `findOwnedMember`, `pickOverload`, and `findExportedDefByName` all consult `model.methods` / `model.fields` / `model.symbols`.
+`SemanticModel` (`mygitnexus/src/core/ingestion/model/semantic-model.ts`) is the authoritative store for every symbol-indexed lookup (by `nodeId`, `simpleName`, `qualifiedName`, or `filePath`). The scope-resolution pipeline reads from here: `findOwnedMember`, `pickOverload`, and `findExportedDefByName` all consult `model.methods` / `model.fields` / `model.symbols`.
 
-`ParsedFile` (`gitnexus-shared/src/scope-resolution/parsed-file.ts`) is the single per-file artifact the scope-resolution pipeline consumes. Scope-resolution passes MUST NOT build a parallel parse representation. If a per-language hook needs AST-level facts that `ParsedFile` doesn't expose, it should reuse the orchestrator's `treeCache` (`RunScopeResolutionInput.treeCache`) rather than re-invoking `parser.parse(...)` on its own — the C# `populateNamespaceSiblings` hook is the reference implementation of this pattern.
+`ParsedFile` (`mygitnexus-shared/src/scope-resolution/parsed-file.ts`) is the single per-file artifact the scope-resolution pipeline consumes. Scope-resolution passes MUST NOT build a parallel parse representation. If a per-language hook needs AST-level facts that `ParsedFile` doesn't expose, it should reuse the orchestrator's `treeCache` (`RunScopeResolutionInput.treeCache`) rather than re-invoking `parser.parse(...)` on its own — the C# `populateNamespaceSiblings` hook is the reference implementation of this pattern.
 
 The scope-resolution pipeline additionally carries `WorkspaceResolutionIndex` for `Scope`-valued lookups (`classScopeByDefId`, `moduleScopeByFile`) that `SemanticModel` structurally cannot hold. No symbol-indexed duplicates exist outside `SemanticModel`.
 
@@ -373,7 +373,7 @@ Unified 3-tier algorithm (`model/resolution-context.ts`), per-language `importSe
 
 `parse` processes files in ~20 MB byte-budget chunks to bound memory. Per chunk:
 
-1. Worker pool dispatches files (the sole parse path — there is no sequential fallback; `skipWorkers`, `--workers 0`, and `GITNEXUS_WORKER_POOL_SIZE=0` are rejected with an actionable error)
+1. Worker pool dispatches files (the sole parse path — there is no sequential fallback; `skipWorkers`, `--workers 0`, and `MYGITNEXUS_WORKER_POOL_SIZE=0` are rejected with an actionable error)
 2. Each worker: detect language → load grammar → run queries → return unified `ParseWorkerResult`
 3. Synthesize wildcard bindings (`wildcard-synthesis.ts`)
 4. Resolve imports
@@ -419,16 +419,16 @@ CLI (analyze.ts) → runFullAnalysis(repoPath, options, callbacks)
 ## Storage
 
 ```
-<repo>/.gitnexus/
+<repo>/.mygitnexus/
   ├── lbug           # LadybugDB database
   ├── lbug.wal       # Write-ahead log
   ├── lbug.shadow    # Shadow sidecar (checkpoint staging)
   ├── lbug.lock      # Single-writer lock
   ├── lbug.{wal,shadow}.dirty-recovery  # parked sidecars from a crashed run; safe to delete
-  ├── gitnexus.json  # lastCommit, indexedAt, stats (primary metadata file)
-  └── meta.json      # legacy mirror of gitnexus.json, kept in sync (see MIGRATION.md)
+  ├── mygitnexus.json  # lastCommit, indexedAt, stats (primary metadata file)
+  └── meta.json      # legacy mirror of mygitnexus.json, kept in sync (see MIGRATION.md)
 
-~/.gitnexus/
+~/.mygitnexus/
   └── registry.json  # Global repo registry (MCP discovery)
 ```
 
@@ -442,7 +442,7 @@ Defined in `lbug/schema.ts`. Separate node tables per type, single `CodeRelation
 
 **Relation types** (`CodeRelation.type`): CONTAINS, DEFINES, CALLS, IMPORTS, INHERITS, EXTENDS, IMPLEMENTS, USES, DECORATES, HAS_METHOD, HAS_PROPERTY, ACCESSES, METHOD_OVERRIDES, METHOD_IMPLEMENTS, MEMBER_OF, STEP_IN_PROCESS, HANDLES_ROUTE, FETCHES, HANDLES_TOOL, ENTRY_POINT_OF, WRAPS, QUERIES, INJECTS, CONDITIONAL_ON, DECLARES, ADVISED_BY, BINDS_EVENT_HANDLER, EMITS_EVENT.
 
-**Optional `--pdg` additions** (off by default, opt-in via `gitnexus analyze --pdg`; see _Optional CFG/PDG emission_ above): a `BasicBlock` node table, plus the PDG relation types `CFG`, `REACHING_DEF`, `CDG`, `TAINTED`, `SANITIZES`, and `TAINT_PATH` on the same `CodeRelation` table. These are deliberately kept out of the default `VALID_RELATION_TYPES` / web graph schema — query them via `cypher`, `explain`, or `pdg_query`.
+**Optional `--pdg` additions** (off by default, opt-in via `mygitnexus analyze --pdg`; see _Optional CFG/PDG emission_ above): a `BasicBlock` node table, plus the PDG relation types `CFG`, `REACHING_DEF`, `CDG`, `TAINTED`, `SANITIZES`, and `TAINT_PATH` on the same `CodeRelation` table. These are deliberately kept out of the default `VALID_RELATION_TYPES` / web graph schema — query them via `cypher`, `explain`, or `pdg_query`.
 
 ## Embeddings and search
 

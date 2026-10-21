@@ -632,7 +632,7 @@ http = [
 ]
 
 [[package]]
-name = "gitnexus-swebench-eval"
+name = "mygitnexus-swebench-eval"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

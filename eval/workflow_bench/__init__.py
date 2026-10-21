@@ -1,4 +1,4 @@
-"""Benchmark the gitnexus-plan / gitnexus-work engineering workflow.
+"""Benchmark the mygitnexus-plan / mygitnexus-work engineering workflow.
 
 Runs real headless Claude Code sessions (``claude -p --output-format json``)
 in throwaway git worktrees, one arm using the skill workflow and one baseline

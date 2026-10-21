@@ -1,6 +1,6 @@
 """Immutable, copy-on-write task assets for workflow benchmark clones.
 
-``sandbox_copy`` inputs can include a several-hundred-megabyte GitNexus
+``sandbox_copy`` inputs can include a several-hundred-megabyte MyGitNexus
 index.  This module captures each declared input set once, freezes that
 snapshot, and then reflinks it into every arm clone.  A clone therefore gets
 an independent inode without paying for another full buffered copy or being

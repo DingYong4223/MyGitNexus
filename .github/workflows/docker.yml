@@ -7,7 +7,7 @@ on:
   pull_request:
   # workflow_dispatch is allowed for dry-run testing only. Publishing is still
   # exclusively tag-driven so that every signed image corresponds 1:1 to a
-  # published `gitnexus@X.Y.Z` on npm. dry_run:true (the default) skips all
+  # published `mygitnexus@X.Y.Z` on npm. dry_run:true (the default) skips all
   # push, sign, and attestation steps — the build runs but nothing is published.
   workflow_dispatch:
     inputs:
@@ -22,7 +22,7 @@ on:
         description: >-
           The full v-prefixed tag to build (e.g. v1.2.3-rc.1).
           The tag must already exist in the repo and its tree must contain
-          a gitnexus/package.json whose version matches the tag.
+          a mygitnexus/package.json whose version matches the tag.
         required: true
         type: string
     # Explicit secret contract — callers pass these by name. Replaces the
@@ -68,24 +68,24 @@ jobs:
       matrix:
         image:
           # Static UI bundle. Small, fast image. Drop-in replacement for the
-          # legacy single-image setup at the same `gitnexus` repository slug
-          # is intentionally avoided — the UI now lives at `gitnexus-web` and
-          # the CLI/server takes the canonical `gitnexus` slug below.
-          - name: gitnexus-web
+          # legacy single-image setup at the same `mygitnexus` repository slug
+          # is intentionally avoided — the UI now lives at `mygitnexus-web` and
+          # the CLI/server takes the canonical `mygitnexus` slug below.
+          - name: mygitnexus-web
             dockerfile: Dockerfile.web
-            slug: gitnexus-web
-          # CLI / `gitnexus serve` backend. Heavy native deps (tree-sitter,
+            slug: mygitnexus-web
+          # CLI / `mygitnexus serve` backend. Heavy native deps (tree-sitter,
           # onnxruntime-node) live only in this image.
-          - name: gitnexus
+          - name: mygitnexus
             dockerfile: Dockerfile.cli
-            slug: gitnexus
+            slug: mygitnexus
 
     steps:
       # Only the workflow_call path requires a non-empty `inputs.tag` — callers
       # (publish.yml in RC mode) must pass the RC tag explicitly. On direct
       # tag pushes the tag comes from `github.ref`, so `inputs.tag` is always
       # empty and validating it here would break every real release (#1064).
-      # The downstream "Verify tag matches gitnexus/package.json version" step
+      # The downstream "Verify tag matches mygitnexus/package.json version" step
       # handles both event types by falling back to GITHUB_REF.
       - name: Validate tag input
         if: github.event_name == 'workflow_call'
@@ -107,10 +107,10 @@ jobs:
 
       # ── Lock the docker image version to the npm package version ──────────
       # Mirrors the check in publish.yml: refuse to build unless the git tag
-      # exactly matches `gitnexus/package.json`'s version. This guarantees
-      # `ghcr.io/<owner>/gitnexus:X.Y.Z` always corresponds to the same
-      # `gitnexus@X.Y.Z` published to npm — no drift, no surprises.
-      - name: Verify tag matches gitnexus/package.json version
+      # exactly matches `mygitnexus/package.json`'s version. This guarantees
+      # `ghcr.io/<owner>/mygitnexus:X.Y.Z` always corresponds to the same
+      # `mygitnexus@X.Y.Z` published to npm — no drift, no surprises.
+      - name: Verify tag matches mygitnexus/package.json version
         id: version
         if: github.event_name != 'workflow_dispatch' && github.event_name != 'pull_request'
         shell: bash
@@ -128,9 +128,9 @@ jobs:
             echo "::error::Tag does not follow semver: v$TAG_VERSION"
             exit 1
           fi
-          PKG_VERSION=$(node -p "require('./gitnexus/package.json').version")
+          PKG_VERSION=$(node -p "require('./mygitnexus/package.json').version")
           if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "::error::Tag version (v$TAG_VERSION) does not match gitnexus/package.json version ($PKG_VERSION)"
+            echo "::error::Tag version (v$TAG_VERSION) does not match mygitnexus/package.json version ($PKG_VERSION)"
             exit 1
           fi
           echo "version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
@@ -160,7 +160,7 @@ jobs:
       # registry most users reach for first, so we publish there too.
       # Requires repo secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (a scoped
       # access token, NOT the account password) with write access to the
-      # `akonlabs/gitnexus` and `akonlabs/gitnexus-web` repos.
+      # `akonlabs/mygitnexus` and `akonlabs/mygitnexus-web` repos.
       - name: Log in to Docker Hub
         if: ${{ github.event_name != 'pull_request' && !inputs.dry_run }}
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0

@@ -1,8 +1,8 @@
-# Definition of Done — GitNexus
+# Definition of Done — MyGitNexus
 
 Last reviewed: 2026-04-23 · Version: 2.0.0
 
-This document defines the repo-wide completion bar for production-ready changes in GitNexus. It is the stable baseline. Implementation prompts, agent behavior, and review workflows may add task-specific checks, but they must never weaken this bar.
+This document defines the repo-wide completion bar for production-ready changes in MyGitNexus. It is the stable baseline. Implementation prompts, agent behavior, and review workflows may add task-specific checks, but they must never weaken this bar.
 
 Use it together with:
 
@@ -18,9 +18,9 @@ A change is **Done** when it is correct, safely integrated, appropriately tested
 
 This DoD applies to:
 
-- CLI, MCP, and HTTP-bridge behavior in `gitnexus/`
-- Browser UI in `gitnexus-web/`
-- Shared contracts in `gitnexus-shared/`
+- CLI, MCP, and HTTP-bridge behavior in `mygitnexus/`
+- Browser UI in `mygitnexus-web/`
+- Shared contracts in `mygitnexus-shared/`
 - CI workflows, release pipelines, and repo-level docs
 
 Out of scope: full agent personas, step-by-step implementation prompts, verbose review formatting rules, repo walkthroughs already covered elsewhere, temporary task-specific acceptance criteria. Those belong in prompts, PR templates, or other repo docs.
@@ -39,13 +39,13 @@ Every change must satisfy **every relevant item** below. If an item does not app
 ### 2.2 Architecture and Placement
 
 - [ ] The change is placed in the correct package and layer:
-  - `gitnexus/` for CLI, MCP, HTTP bridge, ingestion, graph, and runtime logic
-  - `gitnexus-web/` for browser UI (thin client — no WASM workers, all queries via HTTP API)
-  - `gitnexus-shared/` for shared contracts, types, and constants
-- [ ] Pipeline and architecture boundaries remain explicit. Shared ingestion code in `gitnexus/src/core/ingestion/` must not name languages — use `LanguageProvider` hooks (see `AGENTS.md` and `ARCHITECTURE.md` § Call-Resolution DAG).
+  - `mygitnexus/` for CLI, MCP, HTTP bridge, ingestion, graph, and runtime logic
+  - `mygitnexus-web/` for browser UI (thin client — no WASM workers, all queries via HTTP API)
+  - `mygitnexus-shared/` for shared contracts, types, and constants
+- [ ] Pipeline and architecture boundaries remain explicit. Shared ingestion code in `mygitnexus/src/core/ingestion/` must not name languages — use `LanguageProvider` hooks (see `AGENTS.md` and `ARCHITECTURE.md` § Call-Resolution DAG).
 - [ ] No hidden cross-phase coupling; no leaking of language-specific logic into shared infrastructure without a documented architectural reason.
 - [ ] Runtime and graph behavior are consistent — the real source of truth is fixed at the source, not symptom-patched in a downstream layer.
-- [ ] Direct imports from `gitnexus-shared` are used. No barrel re-exports introduced to paper over drift between packages.
+- [ ] Direct imports from `mygitnexus-shared` are used. No barrel re-exports introduced to paper over drift between packages.
 
 ### 2.3 Design and Readability
 
@@ -56,7 +56,7 @@ Every change must satisfy **every relevant item** below. If an item does not app
 
 ### 2.4 Contracts and Compatibility
 
-- [ ] Existing contracts (types in `gitnexus-shared/`, CLI flags, MCP tools/resources, HTTP routes, graph node/edge shapes, persisted IDs) are preserved unless the task explicitly requires a contract change.
+- [ ] Existing contracts (types in `mygitnexus-shared/`, CLI flags, MCP tools/resources, HTTP routes, graph node/edge shapes, persisted IDs) are preserved unless the task explicitly requires a contract change.
 - [ ] Any contract change is intentional, explicit, and reflected in **every direct consumer** in the same change, with types aligned end-to-end.
 - [ ] Persisted data changes (graph schema, IDs, embeddings) are backward-compatible or accompanied by a documented migration / reindex path.
 - [ ] If user-visible behavior, public usage, CLI help, or README examples change, the relevant docs, examples, help text, or migration notes are updated in the same change.
@@ -102,7 +102,7 @@ When the change is produced with or reviewed by an AI agent, the following addit
 
 - [ ] **Scope match.** The final diff matches the intended symbols, files, and processes — no speculative refactors, unrelated formatting churn, or collateral edits outside the task scope.
 - [ ] **Evidence-based edits.** Claims about repo state are verified against the current code, not trusted from memory or stale documentation.
-- [ ] **Impact analysis.** Where GitNexus graph tooling is available and relevant, impact of non-trivial symbol, contract, or runtime-path changes is checked **before** editing.
+- [ ] **Impact analysis.** Where MyGitNexus graph tooling is available and relevant, impact of non-trivial symbol, contract, or runtime-path changes is checked **before** editing.
 - [ ] **Embeddings preserved.** If an indexed repo already has embeddings and re-analysis is required, embeddings are preserved — not accidentally dropped by a destructive reindex.
 - [ ] **No false-done.** "Done" is claimed only after the Validation Baseline below has been run or any gap is explicitly named. Green tests on an unrelated path do not constitute validation.
 - [ ] **Five-axis self-review** before handing off: correctness, readability, architecture, security, performance.
@@ -113,28 +113,28 @@ Run the commands relevant to the touched area. If something cannot be run in the
 
 ### 4.1 Build ordering
 
-- [ ] `gitnexus-shared/` dist is built before consuming packages are typechecked or tested (CI uses the `setup-gitnexus` action for this — local runs must match).
+- [ ] `mygitnexus-shared/` dist is built before consuming packages are typechecked or tested (CI uses the `setup-mygitnexus` action for this — local runs must match).
 
-### 4.2 If `gitnexus/` changed
+### 4.2 If `mygitnexus/` changed
 
-- [ ] `cd gitnexus && npx tsc --noEmit`
-- [ ] `cd gitnexus && npm test`
-- [ ] `cd gitnexus && npx prettier --check .` for files in the diff (pre-commit runs the affected-tests subset; do not expand scope)
+- [ ] `cd mygitnexus && npx tsc --noEmit`
+- [ ] `cd mygitnexus && npm test`
+- [ ] `cd mygitnexus && npx prettier --check .` for files in the diff (pre-commit runs the affected-tests subset; do not expand scope)
 
-### 4.3 If `gitnexus-web/` changed
+### 4.3 If `mygitnexus-web/` changed
 
-- [ ] `cd gitnexus-web && npx tsc -b --noEmit`
-- [ ] `cd gitnexus-web && npm test`
-- [ ] `cd gitnexus-web && npm run test:e2e` when browser flows or user-facing UI behavior changed
+- [ ] `cd mygitnexus-web && npx tsc -b --noEmit`
+- [ ] `cd mygitnexus-web && npm test`
+- [ ] `cd mygitnexus-web && npm run test:e2e` when browser flows or user-facing UI behavior changed
 
-### 4.4 If `gitnexus-shared/` changed
+### 4.4 If `mygitnexus-shared/` changed
 
-- [ ] Shared package builds cleanly (`npm run build` in `gitnexus-shared/`)
+- [ ] Shared package builds cleanly (`npm run build` in `mygitnexus-shared/`)
 - [ ] Dependent packages still typecheck and test after the shared change — verify both CLI and web consumers together
 
 ### 4.5 If CI workflows or release pipelines changed
 
-- [ ] The workflow passes a dry-run or triggered run; concurrency (`cancel-in-progress`) and the `setup-gitnexus` action remain wired correctly. Workflows that only execute once registered on the default branch (an `issue_comment` trigger, or a newly added `workflow_dispatch`) cannot be dry-run pre-merge — merge them **registered but disabled**, then validate same-repo and fork execution post-merge before enabling.
+- [ ] The workflow passes a dry-run or triggered run; concurrency (`cancel-in-progress`) and the `setup-mygitnexus` action remain wired correctly. Workflows that only execute once registered on the default branch (an `issue_comment` trigger, or a newly added `workflow_dispatch`) cannot be dry-run pre-merge — merge them **registered but disabled**, then validate same-repo and fork execution post-merge before enabling.
 - [ ] `CHANGELOG.md` is **not** edited here — it is owned by the release process.
 
 ## 5. Review Gates
@@ -154,7 +154,7 @@ A reviewer (human or agent) should be able to answer **yes** to each of the foll
 A change is **not** Done if any of the following is true, even if CI is green:
 
 - The runtime path is not actually exercised by the tests.
-- A contract drifted between `gitnexus/`, `gitnexus-web/`, and `gitnexus-shared/` and only one side was updated.
+- A contract drifted between `mygitnexus/`, `mygitnexus-web/`, and `mygitnexus-shared/` and only one side was updated.
 - A language-specific concern leaked into shared ingestion code.
 - The diff contains unrelated reformatting, refactors, or cleanup beyond the stated task.
 - Logs, comments, or TODOs were added as placeholders for work not done.

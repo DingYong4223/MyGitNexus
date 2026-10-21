@@ -4,7 +4,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from analysis.analyze_results import parse_run_id
-from environments.gitnexus_docker import GitNexusDockerEnvironment
+from environments.mygitnexus_docker import MyGitNexusDockerEnvironment
 from tool_registry import TOOL_SPECS
 from utils.errors import sanitize_exception
 
@@ -52,12 +52,12 @@ def test_sanitize_exception_respects_debug_flag(message: str) -> None:
 
 @given(st.sampled_from(list(TOOL_SPECS.values())), st.integers(min_value=1, max_value=99999))
 def test_render_tool_script_contains_expected_paths(spec, port: int) -> None:
-    script = GitNexusDockerEnvironment._render_tool_script(spec, str(port))
+    script = MyGitNexusDockerEnvironment._render_tool_script(spec, str(port))
 
     assert spec.fallback.strip() in script
     if spec.endpoint:
         assert spec.endpoint in script
-        assert f"${{GITNEXUS_EVAL_PORT:-{port}}}" in script
+        assert f"${{MYGITNEXUS_EVAL_PORT:-{port}}}" in script
         assert "curl" in script
     else:
         assert "curl" not in script

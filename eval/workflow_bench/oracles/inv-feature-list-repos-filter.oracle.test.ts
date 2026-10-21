@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { LocalBackend } from '../gitnexus/src/mcp/local/local-backend.js';
-import { MCP_TOOLS } from '../gitnexus/src/mcp/tools.js';
+import { LocalBackend } from '../mygitnexus/src/mcp/local/local-backend.js';
+import { MCP_TOOLS } from '../mygitnexus/src/mcp/tools.js';
 
 const repositories = [
   { name: 'Alpha', path: '/repos/z-alpha' },

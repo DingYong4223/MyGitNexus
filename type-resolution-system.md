@@ -1,6 +1,6 @@
 # Type Resolution System
 
-GitNexus's type resolution system maps variables to likely declared types across the supported languages so the ingestion pipeline can perform **receiver-constrained call resolution**.
+MyGitNexus's type resolution system maps variables to likely declared types across the supported languages so the ingestion pipeline can perform **receiver-constrained call resolution**.
 
 When the code contains a call such as `user.save()`, the resolver tries to determine that `user` is a `User`, allowing call resolution to prefer `User#save` over unrelated methods such as `Repo#save`.
 
@@ -38,7 +38,7 @@ buildTypeEnv(tree, language, symbolTable?)
 
 The `TypeEnvironment` is built once per file. `call-processor.ts` then uses `lookup()` to determine receiver types and narrow candidate symbols from the `SymbolTable`.
 
-> **Note (RFC #909 Ring 3):** `call-processor.ts` is the legacy call-resolution path. Languages in `MIGRATED_LANGUAGES` (see `gitnexus/src/core/ingestion/registry-primary-flag.ts`) route through the scope-resolution pipeline instead — see `ARCHITECTURE.md § Scope-Resolution Pipeline`. TypeEnv is still built for migrated languages in the parse worker, but receiver typing flows through `ParsedTypeBinding` + `ScopeResolutionIndexes` rather than `call-processor.ts`.
+> **Note (RFC #909 Ring 3):** `call-processor.ts` is the legacy call-resolution path. Languages in `MIGRATED_LANGUAGES` (see `mygitnexus/src/core/ingestion/registry-primary-flag.ts`) route through the scope-resolution pipeline instead — see `ARCHITECTURE.md § Scope-Resolution Pipeline`. TypeEnv is still built for migrated languages in the parse worker, but receiver typing flows through `ParsedTypeBinding` + `ScopeResolutionIndexes` rather than `call-processor.ts`.
 
 ---
 

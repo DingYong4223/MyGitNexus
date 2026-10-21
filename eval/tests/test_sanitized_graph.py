@@ -1,4 +1,4 @@
-"""Sanitized, offline GitNexus graph preparation contracts."""
+"""Sanitized, offline MyGitNexus graph preparation contracts."""
 
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ from workflow_bench.proposer_sandbox import ReadOnlyMount, SandboxError
 @pytest.mark.parametrize(
     "task",
     [
-        {"sandbox_copy": [".gitnexus/lbug"]},
+        {"sandbox_copy": [".mygitnexus/lbug"]},
         {"sandbox_copy": ["eval/workflow_bench/oracles"]},
-        {"sandbox_dependencies": [{"source": ".gitnexus", "target": "graph"}]},
+        {"sandbox_dependencies": [{"source": ".mygitnexus", "target": "graph"}]},
         {"sandbox_dependencies": [{"source": "safe", "target": "eval/workflow_bench"}]},
     ],
 )
@@ -30,10 +30,10 @@ def test_prebuilt_graph_and_harness_assets_are_rejected(task):
 def test_graph_environment_is_offline_deterministic_and_ignores_target_gitignore():
     env = sanitized_graph._graph_environment()
 
-    assert env["GITNEXUS_HOME"] == "/home/agent/.gitnexus-index"
-    assert env["GITNEXUS_NO_GITIGNORE"] == "1"
-    assert env["GITNEXUS_WORKER_POOL_SIZE"] == "1"
-    assert env["GITNEXUS_PARSE_CHUNK_CONCURRENCY"] == "1"
+    assert env["MYGITNEXUS_HOME"] == "/home/agent/.mygitnexus-index"
+    assert env["MYGITNEXUS_NO_GITIGNORE"] == "1"
+    assert env["MYGITNEXUS_WORKER_POOL_SIZE"] == "1"
+    assert env["MYGITNEXUS_PARSE_CHUNK_CONCURRENCY"] == "1"
     assert "ANTHROPIC_API_KEY" not in env
 
 
@@ -84,11 +84,11 @@ def test_prepare_sanitized_graph_builds_once_from_parentless_tree_and_caches_onl
     seed = tmp_path / "seed"
     seed.mkdir()
     (seed / ".git").mkdir()
-    old_index = seed / ".gitnexus"
+    old_index = seed / ".mygitnexus"
     old_index.mkdir()
     (old_index / "lbug").write_text("UNSANITIZED")
-    (seed / ".gitnexusrc").write_text('{"embeddings":true,"pdg":false}\n')
-    (seed / ".gitnexusignore").write_text("eval/**\n")
+    (seed / ".mygitnexusrc").write_text('{"embeddings":true,"pdg":false}\n')
+    (seed / ".mygitnexusignore").write_text("eval/**\n")
     sanitized_head = "a" * 40
     prefix_options: list[dict[str, object]] = []
     graph_calls: list[tuple[str, ...]] = []
@@ -109,14 +109,14 @@ def test_prepare_sanitized_graph_builds_once_from_parentless_tree_and_caches_onl
         del timeout
         graph_calls.append(tuple(arguments))
         if arguments[0] == "analyze":
-            index = seed / ".gitnexus"
+            index = seed / ".mygitnexus"
             index.mkdir()
             metadata = {
                 "indexedAt": "2026-07-18T00:00:00Z",
                 "lastCommit": sanitized_head,
                 "pdg": {"hasCallSummary": True},
             }
-            (index / "gitnexus.json").write_text(json.dumps(metadata))
+            (index / "mygitnexus.json").write_text(json.dumps(metadata))
             (index / "meta.json").write_text(json.dumps(metadata))
             (index / "lbug").write_bytes(b"SANITIZED")
             (index / "run.cjs").write_text("must not be cached")
@@ -165,8 +165,8 @@ def test_prepare_sanitized_graph_builds_once_from_parentless_tree_and_caches_onl
     for flag in ("--force", "--pdg", "--index-only", "--no-stats"):
         assert flag in analyze
     assert prefix_options == [{"unshare_network": True}]
-    assert (seed / ".gitnexusrc").read_text() == "{}\n"
-    assert (seed / ".gitnexusignore").read_text() == ""
+    assert (seed / ".mygitnexusrc").read_text() == "{}\n"
+    assert (seed / ".mygitnexusignore").read_text() == ""
     assert cache.calls == [
         (
             {"sandbox_copy": list(sanitized_graph.GRAPH_ASSET_PATHS)},
@@ -175,7 +175,7 @@ def test_prepare_sanitized_graph_builds_once_from_parentless_tree_and_caches_onl
         )
     ]
     cached_paths = cache.calls[0][0]["sandbox_copy"]
-    assert ".gitnexus/run.cjs" not in cached_paths
+    assert ".mygitnexus/run.cjs" not in cached_paths
     assert all("parse-cache" not in path for path in cached_paths)
     assert snapshot.sanitized_head == sanitized_head
     assert snapshot.digest == "graph-digest"

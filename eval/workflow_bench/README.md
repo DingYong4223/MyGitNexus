@@ -1,6 +1,6 @@
 # Workflow benchmark — observe the token savings
 
-Measures whether the `gitnexus-plan` → `gitnexus-work` engineering workflow
+Measures whether the `mygitnexus-plan` → `mygitnexus-work` engineering workflow
 actually saves tokens versus a baseline agent on the same tasks, using real
 headless Claude Code sessions. Nothing is estimated: every number comes from
 the CLI's own final event in its parent-captured `--output-format stream-json`
@@ -10,16 +10,16 @@ report.
 
 | Arm | Sessions | Notes |
 | --- | --- | --- |
-| `workflow` | `gitnexus-plan` on the task, then `gitnexus-work` on the produced plan | The skills must be installed (`gitnexus setup`, or repo-local `.claude/skills/`) |
+| `workflow` | `mygitnexus-plan` on the task, then `mygitnexus-work` on the produced plan | The skills must be installed (`mygitnexus setup`, or repo-local `.claude/skills/`) |
 | `candidate_workflow` | same sessions as `workflow`, with a candidate skill overlay | Paired with `workflow` on the same task/ref/model |
-| `workflow_direct` | one `gitnexus-work` direct-mode session | The middle option — execution discipline without a planning pass |
+| `workflow_direct` | one `mygitnexus-work` direct-mode session | The middle option — execution discipline without a planning pass |
 | `candidate_workflow_direct` | same session as `workflow_direct`, with a candidate skill overlay | Paired with `workflow_direct` on the same task/ref/model |
 | `ce_workflow` | `ce-plan` on the task, then `ce-work` on the produced plan | External comparator: the explicitly supplied, pinned compound-engineering plugin's plan→work family |
 | `ce_workflow_direct` | one `ce-work` direct-mode session | External comparator paired with `workflow_direct` |
-| `review` | one `gitnexus-review` session over local uncommitted changes | The task's `setup` applies the diff under review; the review is written to `review-output.md` so `verify` can gate on it |
+| `review` | one `mygitnexus-review` session over local uncommitted changes | The task's `setup` applies the diff under review; the review is written to `review-output.md` so `verify` can gate on it |
 | `ce_review` | one `ce-code-review` session over the same changes | External comparator paired with `review` |
 | `baseline` | one session with the identical task text | `--disallowedTools Skill` so it cannot borrow the workflow; same repo, same MCP tools |
-| `baseline_nomcp` | like baseline, graph tools also disallowed | Separates the workflow-discipline question from the GitNexus-tools question (off by default) |
+| `baseline_nomcp` | like baseline, graph tools also disallowed | Separates the workflow-discipline question from the MyGitNexus-tools question (off by default) |
 
 Every arm runs in a fresh detached git worktree of the task's `ref`, once per
 `--runs`. The model-visible `verify` command is recorded as
@@ -36,7 +36,7 @@ lfg's gate and work's direct-mode triage should encode.
 
 ```bash
 cd eval
-export GITNEXUS_BENCH_AUTH_TOKEN="$ANTHROPIC_API_KEY"
+export MYGITNEXUS_BENCH_AUTH_TOKEN="$ANTHROPIC_API_KEY"
 uv run --locked --extra dev python -m workflow_bench.runner \
   --tasks workflow_bench/tasks.scenarios.yaml --runs 3 \
   --model claude-sonnet-4-20250514
@@ -81,10 +81,10 @@ Claude runs in bare,
 not inherit the model credential and their network sandbox denies all
 domains.
 
-Prebuilt task `.gitnexus` assets are rejected. For each task commit, the
+Prebuilt task `.mygitnexus` assets are rejected. For each task commit, the
 harness creates the deterministic parentless snapshot first, removes every
 analyzer-visible path or stored source reference to the benchmark harness,
-neutralizes target-controlled GitNexus config/ignore files, and builds one
+neutralizes target-controlled MyGitNexus config/ignore files, and builds one
 fresh PDG index offline with `--pdg --index-only --no-stats`. It then proves
 that neither whole graph nodes nor relationships contain a harness marker and
 caches only the bound metadata/database assets for reuse by paired arms.
@@ -99,8 +99,8 @@ and unreachable Git objects are pruned so `git show` cannot recover the hidden
 bytes. Only after the model exits (and after the authored-test signal is
 collected) does the harness materialize the oracle beneath a private host
 root, mount it read-only at a random workspace sibling, and supply that mount
-through `GITNEXUS_BENCH_ORACLE_ROOT`. This layout preserves hidden tests'
-`../gitnexus` imports as the credited candidate checkout. Authored and hidden
+through `MYGITNEXUS_BENCH_ORACLE_ROOT`. This layout preserves hidden tests'
+`../mygitnexus` imports as the credited candidate checkout. Authored and hidden
 verifiers run with the complete workspace read-only and networking unshared;
 hidden stdout/stderr is never persisted. The harness re-checks every oracle
 byte and erases the mountpoint before churn/patch capture. Shipped Vitest
@@ -121,7 +121,7 @@ evidence.
 
 Bare mode is deliberately non-interactive: it does not consult a stored
 Claude login/keychain or `ANTHROPIC_AUTH_TOKEN`. Supply one explicit API or
-proxy key through `GITNEXUS_BENCH_AUTH_TOKEN` (preferred) or `--auth-token`;
+proxy key through `MYGITNEXUS_BENCH_AUTH_TOKEN` (preferred) or `--auth-token`;
 the harness maps it to `ANTHROPIC_API_KEY` only for the trusted Claude parent
 and scrubs it from agent-launched tools.
 
@@ -145,8 +145,8 @@ Build an overlay that mirrors only the canonical repo-local skill paths:
 ```text
 /tmp/gn-skill-candidate/
 └── .claude/skills/
-    ├── gitnexus-plan/SKILL.md
-    └── gitnexus-work/SKILL.md
+    ├── mygitnexus-plan/SKILL.md
+    └── mygitnexus-work/SKILL.md
 ```
 
 The overlay may contain Markdown files from either of those two skill
@@ -307,7 +307,7 @@ These figures predate mandatory model provenance and are retained only as
 historical calibration. They are not eligible promotion evidence and must not
 be combined with current named-model runs.
 
-Three task classes × three arms, single-repo (GitNexus itself). **Every arm
+Three task classes × three arms, single-repo (MyGitNexus itself). **Every arm
 resolved every task** — at this difficulty, pass/fail quality is saturated
 and the comparison is pure cost:
 
@@ -343,8 +343,8 @@ What the ground base says, honestly:
   comparable across arms and are omitted above.
 
 Routing implication (to revisit as cells fill in): for tasks up to this
-size, `gitnexus-work` direct mode or a plain agent is the cost-optimal
-route; reserve full `gitnexus-plan` → `gitnexus-work` for cross-module work,
+size, `mygitnexus-work` direct mode or a plain agent is the cost-optimal
+route; reserve full `mygitnexus-plan` → `mygitnexus-work` for cross-module work,
 multi-session execution, or when the plan document itself is a deliverable.
 If a future run shows the workflow flattering itself here, distrust the run.
 
@@ -415,14 +415,14 @@ require investigation — the workflow's savings come from *not re-reading and
 not re-investigating*, which trivial tasks never exercise. Keep `verify` as a
 model-visible authored-test quality signal, and add an independent `oracle`
 whose source files live under `workflow_bench/oracles/`. Oracle commands must
-run only files staged beneath `$GITNEXUS_BENCH_ORACLE_ROOT`; for Vitest, include
+run only files staged beneath `$MYGITNEXUS_BENCH_ORACLE_ROOT`; for Vitest, include
 the shared `vitest.config.mts` as an oracle file and pass it explicitly with
 `--config`. Prefer `verify` commands that use the repo's own npm scripts (they
 carry build pre-hooks).
 
 ## Relation to the SWE-bench harness
 
-The rest of `eval/` benchmarks GitNexus *tools* inside a litellm agent loop
+The rest of `eval/` benchmarks MyGitNexus *tools* inside a litellm agent loop
 (baseline vs graph-enhanced). This module benchmarks the *skill workflow*
 inside the real CLI harness those skills ship for. Different question, same
 spirit: measure, don't assume.

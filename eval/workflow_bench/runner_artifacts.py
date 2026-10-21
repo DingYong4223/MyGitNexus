@@ -57,20 +57,20 @@ WORKSPACE_SNAPSHOT_BOOTSTRAP_NOISE = frozenset(
 
 # The set above is matched at the workspace ROOT only, because most of its
 # entries (package.json, node_modules, the .env family) are also legitimate
-# repository content further down the tree -- gitnexus/package.json and
-# gitnexus/.claude/settings.local.json are both tracked files whose edits must
+# repository content further down the tree -- mygitnexus/package.json and
+# mygitnexus/.claude/settings.local.json are both tracked files whose edits must
 # still be caught. But Claude Code bootstraps into whatever directory it is
 # running in, so a task whose prompt cd's into a subdirectory gets the same
 # noise one level down. Observed in skill-evolution run 29861768554: 13 of 18
 # sessions failed with "phase changed unauthorized workspace path(s):
-# gitnexus/.claude/.cc-writes". That entry is matched at ANY depth -- never
+# mygitnexus/.claude/.cc-writes". That entry is matched at ANY depth -- never
 # ".claude" itself, which holds real configuration.
 #
 # Deliberately only .cc-writes. Every excluded name is a blind spot: once a
-# .claude directory already exists (gitnexus/.claude/settings.local.json is
+# .claude directory already exists (mygitnexus/.claude/settings.local.json is
 # tracked), anything a phase writes underneath an excluded entry becomes
 # invisible to this check, and Claude Code loads .claude/agents relative to
-# its cwd -- which these tasks point at gitnexus/. Adding "agents" and
+# its cwd -- which these tasks point at mygitnexus/. Adding "agents" and
 # "commands" here on the theory that they might also appear nested would let a
 # planning phase plant a definition that the later work phase reads, with no
 # evidence in the boundary check. Only .cc-writes was ever observed nested, so

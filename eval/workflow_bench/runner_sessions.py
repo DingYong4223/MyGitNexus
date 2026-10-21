@@ -15,8 +15,8 @@ from typing import Any
 
 from .process_control import run_managed
 from .proposer_sandbox import (
-    SANDBOX_GITNEXUS,
-    SANDBOX_GITNEXUS_REGISTRY,
+    SANDBOX_MYGITNEXUS,
+    SANDBOX_MYGITNEXUS_REGISTRY,
     SANDBOX_HOME,
     SANDBOX_NODE,
     SANDBOX_TMP,
@@ -53,7 +53,7 @@ def measured_cost(raw: Any) -> float | None:
     return float(raw)
 
 
-SANDBOX_GITNEXUS_ENTRYPOINT = f"{SANDBOX_GITNEXUS}/dist/cli/index.js"
+SANDBOX_MYGITNEXUS_ENTRYPOINT = f"{SANDBOX_MYGITNEXUS}/dist/cli/index.js"
 SENSITIVE_EVENT_KEYS = frozenset(
     {
         "authorization",
@@ -74,50 +74,50 @@ SENSITIVE_EVENT_KEYS = frozenset(
     }
 )
 
-GITNEXUS_READ_ONLY_TOOLS = (
-    "mcp__gitnexus__list_repos",
-    "mcp__gitnexus__query",
-    "mcp__gitnexus__context",
-    "mcp__gitnexus__check",
-    "mcp__gitnexus__impact",
-    "mcp__gitnexus__explain",
-    "mcp__gitnexus__pdg_query",
-    "mcp__gitnexus__route_map",
-    "mcp__gitnexus__tool_map",
-    "mcp__gitnexus__shape_check",
-    "mcp__gitnexus__api_impact",
-    "mcp__gitnexus__trace",
-    "mcp__gitnexus__detect_changes",
+MYGITNEXUS_READ_ONLY_TOOLS = (
+    "mcp__mygitnexus__list_repos",
+    "mcp__mygitnexus__query",
+    "mcp__mygitnexus__context",
+    "mcp__mygitnexus__check",
+    "mcp__mygitnexus__impact",
+    "mcp__mygitnexus__explain",
+    "mcp__mygitnexus__pdg_query",
+    "mcp__mygitnexus__route_map",
+    "mcp__mygitnexus__tool_map",
+    "mcp__mygitnexus__shape_check",
+    "mcp__mygitnexus__api_impact",
+    "mcp__mygitnexus__trace",
+    "mcp__mygitnexus__detect_changes",
 )
-GITNEXUS_MUTATING_TOOLS = ("mcp__gitnexus__rename",)
+MYGITNEXUS_MUTATING_TOOLS = ("mcp__mygitnexus__rename",)
 BUILTIN_AGENT_TOOLS = ("Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill")
 
 
 def sandbox_mcp_config() -> str:
     """Credential-free MCP configuration using only the pinned harness runtime."""
 
-    entrypoint = PurePosixPath(SANDBOX_GITNEXUS_ENTRYPOINT)
+    entrypoint = PurePosixPath(SANDBOX_MYGITNEXUS_ENTRYPOINT)
     workspace = PurePosixPath(SANDBOX_WORKSPACE)
     if not entrypoint.is_absolute() or entrypoint == workspace or workspace in entrypoint.parents:
-        raise SandboxError(f"GitNexus MCP executable must stay outside {SANDBOX_WORKSPACE}")
+        raise SandboxError(f"MyGitNexus MCP executable must stay outside {SANDBOX_WORKSPACE}")
 
     config = {
         "mcpServers": {
-            "gitnexus": {
+            "mygitnexus": {
                 "type": "stdio",
                 "command": "/usr/bin/env",
                 "args": [
                     "-i",
                     f"HOME={SANDBOX_HOME}",
                     f"TMPDIR={SANDBOX_TMP}",
-                    f"GITNEXUS_HOME={SANDBOX_GITNEXUS_REGISTRY}",
-                    f"GITNEXUS_MCP_ALLOWED_REPOS={SANDBOX_WORKSPACE}",
-                    f"GITNEXUS_MCP_DEFAULT_REPO={SANDBOX_WORKSPACE}",
+                    f"MYGITNEXUS_HOME={SANDBOX_MYGITNEXUS_REGISTRY}",
+                    f"MYGITNEXUS_MCP_ALLOWED_REPOS={SANDBOX_WORKSPACE}",
+                    f"MYGITNEXUS_MCP_DEFAULT_REPO={SANDBOX_WORKSPACE}",
                     "PATH=/usr/local/bin:/usr/bin:/bin",
                     "LANG=C.UTF-8",
                     "GIT_TERMINAL_PROMPT=0",
                     SANDBOX_NODE,
-                    SANDBOX_GITNEXUS_ENTRYPOINT,
+                    SANDBOX_MYGITNEXUS_ENTRYPOINT,
                     "mcp",
                 ],
             }
@@ -129,9 +129,9 @@ def sandbox_mcp_config() -> str:
 def allowed_agent_tools(*, implementation: bool, include_mcp: bool = True) -> list[str]:
     tools = [*BUILTIN_AGENT_TOOLS]
     if include_mcp:
-        tools.extend(GITNEXUS_READ_ONLY_TOOLS)
+        tools.extend(MYGITNEXUS_READ_ONLY_TOOLS)
     if include_mcp and implementation:
-        tools.extend(GITNEXUS_MUTATING_TOOLS)
+        tools.extend(MYGITNEXUS_MUTATING_TOOLS)
     return tools
 
 

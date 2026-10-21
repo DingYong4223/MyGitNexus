@@ -6,7 +6,7 @@ def _raise_value_error():
 
 
 def test_sanitize_exception_without_debug(monkeypatch):
-    monkeypatch.delenv("GITNEXUS_EVAL_DEBUG", raising=False)
+    monkeypatch.delenv("MYGITNEXUS_EVAL_DEBUG", raising=False)
     try:
         _raise_value_error()
     except Exception as exc:  # noqa: BLE001
@@ -18,7 +18,7 @@ def test_sanitize_exception_without_debug(monkeypatch):
 
 
 def test_sanitize_exception_with_debug(monkeypatch):
-    monkeypatch.setenv("GITNEXUS_EVAL_DEBUG", "1")
+    monkeypatch.setenv("MYGITNEXUS_EVAL_DEBUG", "1")
     try:
         _raise_value_error()
     except Exception as exc:  # noqa: BLE001

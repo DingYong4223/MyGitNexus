@@ -1,7 +1,7 @@
 name: Publish
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Sole publisher for the `gitnexus` npm package, GitHub Releases, and Docker
+# Sole publisher for the `mygitnexus` npm package, GitHub Releases, and Docker
 # images. Replaces the former two-workflow design — see issue #1609 for the
 # double-publish race this unification closes.
 #
@@ -364,8 +364,8 @@ jobs:
         # ENOENT errors. Fail loudly and early here instead.
         shell: bash
         run: |
-          if [ ! -f gitnexus/package.json ]; then
-            echo "::error::no working tree at gitnexus/package.json — route classification likely failed silently."
+          if [ ! -f mygitnexus/package.json ]; then
+            echo "::error::no working tree at mygitnexus/package.json — route classification likely failed silently."
             exit 1
           fi
 
@@ -396,19 +396,19 @@ jobs:
           # cache-poisoning audit). ~30s slower per release; runs rarely.
           package-manager-cache: false
 
-      - name: Build gitnexus-shared
+      - name: Build mygitnexus-shared
         run: npm ci && npm run build
-        working-directory: gitnexus-shared
+        working-directory: mygitnexus-shared
 
-      - name: Install gitnexus dependencies
+      - name: Install mygitnexus dependencies
         run: npm ci
-        working-directory: gitnexus
+        working-directory: mygitnexus
 
       # ── Stable-only: verify the tag and package.json agree ───────────────
       - name: Verify version consistency (stable)
         if: needs.route.outputs.mode == 'stable'
         shell: bash
-        working-directory: gitnexus
+        working-directory: mygitnexus
         run: |
           set -euo pipefail
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
@@ -434,11 +434,11 @@ jobs:
         id: rc-version
         if: needs.route.outputs.mode == 'rc'
         shell: bash
-        working-directory: gitnexus
+        working-directory: mygitnexus
         env:
           BUMP_INPUT: ${{ inputs.bump }}
           EVENT_NAME: ${{ github.event_name }}
-          PKG_NAME: gitnexus
+          PKG_NAME: mygitnexus
         run: |
           set -euo pipefail
 
@@ -582,31 +582,31 @@ jobs:
       - name: Apply rc version in-CI
         if: needs.route.outputs.mode == 'rc'
         shell: bash
-        working-directory: gitnexus
+        working-directory: mygitnexus
         run: |
           set -euo pipefail
           npm version "${{ steps.rc-version.outputs.rc_version }}" \
             --no-git-tag-version --allow-same-version
 
       # ── Verify the plugin manifest surfaces synced (#2445) ───────────────
-      # The npm `version` lifecycle script in gitnexus/package.json syncs all
+      # The npm `version` lifecycle script in mygitnexus/package.json syncs all
       # four manifest surfaces whenever `npm version` runs (the step above,
       # and a maintainer's laptop alike). This step only verifies fail-closed
       # so a future removal of that wiring cannot ship a drifted RC again.
       - name: Verify plugin manifests (rc)
         if: needs.route.outputs.mode == 'rc'
         shell: bash
-        working-directory: gitnexus
+        working-directory: mygitnexus
         run: node scripts/sync-plugin-manifests.mjs --check
 
-      - name: Build gitnexus
+      - name: Build mygitnexus
         run: npm run build
-        working-directory: gitnexus
+        working-directory: mygitnexus
 
       - name: Dry-run publish
         # Cheap verification that the tarball assembles before the real publish.
         shell: bash
-        working-directory: gitnexus
+        working-directory: mygitnexus
         env:
           NPM_TAG: ${{ needs.route.outputs.mode == 'rc' && 'rc' || 'latest' }}
         run: npm publish --dry-run --tag "$NPM_TAG"
@@ -623,7 +623,7 @@ jobs:
         id: rc-tags
         if: needs.route.outputs.mode == 'rc'
         shell: bash
-        working-directory: gitnexus
+        working-directory: mygitnexus
         env:
           RC_VERSION: ${{ steps.rc-version.outputs.rc_version }}
           HEAD_SHA: ${{ needs.rc-guard.outputs.head_sha }}
@@ -633,7 +633,7 @@ jobs:
           # .git/config (artipacked audit) — checkout above ran with
           # `persist-credentials: false`.
           PUSH_TOKEN: ${{ steps.app-token.outputs.token }}
-          # App's slug from create-github-app-token (e.g. `gitnexus-release-bot`).
+          # App's slug from create-github-app-token (e.g. `mygitnexus-release-bot`).
           # Used to attribute the release commit to the App identity rather
           # than the generic github-actions[bot]. The bot's numeric user-id
           # is resolved at runtime via the GitHub API (the action does not
@@ -686,9 +686,9 @@ jobs:
           git add package.json package-lock.json 2>/dev/null || git add package.json
           # The synced manifest surfaces (#2445) belong in the same detached
           # release commit so the tag's tree passes its own version contract.
-          git add ../gitnexus-claude-plugin/.claude-plugin/plugin.json \
+          git add ../mygitnexus-claude-plugin/.claude-plugin/plugin.json \
             ../.claude-plugin/marketplace.json \
-            ../gitnexus-claude-plugin/.codex-plugin/plugin.json \
+            ../mygitnexus-claude-plugin/.codex-plugin/plugin.json \
             ../.agents/plugins/marketplace.json
           git commit -m "release: ${VTAG}" --allow-empty
           RELEASE_SHA="$(git rev-parse HEAD)"
@@ -798,15 +798,15 @@ jobs:
       # publishes — no --provenance flag needed.
       #
       # Prerequisite: register the package as a trusted publisher at
-      # https://www.npmjs.com/package/gitnexus/access (Publishing access →
+      # https://www.npmjs.com/package/mygitnexus/access (Publishing access →
       # Trusted Publishers → GitHub Actions):
       #   Owner:       abhigyanpatwari
-      #   Repository:  GitNexus
+      #   Repository:  MyGitNexus
       #   Workflow:    publish.yml
       #   Environment: (none)
       - name: Publish to npm
         shell: bash
-        working-directory: gitnexus
+        working-directory: mygitnexus
         env:
           NPM_TAG: ${{ needs.route.outputs.mode == 'rc' && 'rc' || 'latest' }}
         run: npm publish --access public --tag "$NPM_TAG"
@@ -818,7 +818,7 @@ jobs:
         shell: bash
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
-          NOTES=$(awk "/^## \\[$VERSION\\]/{found=1; next} /^## \\[/{if(found) exit} found" gitnexus/CHANGELOG.md)
+          NOTES=$(awk "/^## \\[$VERSION\\]/{found=1; next} /^## \\[/{if(found) exit} found" mygitnexus/CHANGELOG.md)
           if [ -z "$NOTES" ]; then
             echo "::warning::No CHANGELOG entry found for v$VERSION, falling back to auto-generated notes"
             echo "fallback=true" >> "$GITHUB_OUTPUT"
@@ -847,7 +847,7 @@ jobs:
                 || steps.changelog.outputs.fallback == 'true' }}
           body: >-
             ${{ needs.route.outputs.mode == 'rc' && format(
-              'Automated release candidate build from `main`.{0}{0}**npm:** `npm install gitnexus@rc`{0}**Version:** `{1}`{0}**Target base:** `{2}` (rc #{3}){0}**Source commit (main):** {4}{0}**Release commit (versioned tree):** {5}{0}{0}Release candidates are pre-stable builds intended for early testing. Stable releases remain on the `latest` dist-tag.',
+              'Automated release candidate build from `main`.{0}{0}**npm:** `npm install mygitnexus@rc`{0}**Version:** `{1}`{0}**Target base:** `{2}` (rc #{3}){0}**Source commit (main):** {4}{0}**Release commit (versioned tree):** {5}{0}{0}Release candidates are pre-stable builds intended for early testing. Stable releases remain on the `latest` dist-tag.',
               '\n',
               steps.rc-version.outputs.rc_version,
               steps.rc-version.outputs.base,
@@ -871,7 +871,7 @@ jobs:
       - name: Cleanup pushed tags on partial failure
         if: ${{ failure() && needs.route.outputs.mode == 'rc' && steps.rc-tags.outputs.vtag != '' }}
         shell: bash
-        working-directory: gitnexus
+        working-directory: mygitnexus
         env:
           VTAG: ${{ steps.rc-tags.outputs.vtag }}
           MARKER: ${{ steps.rc-tags.outputs.marker }}

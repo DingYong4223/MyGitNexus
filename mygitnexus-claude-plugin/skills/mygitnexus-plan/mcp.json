@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mygitnexus": {
+      "command": "npx",
+      "args": ["-y", "mygitnexus@0.0.1", "mcp"]
+    }
+  }
+}

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('../gitnexus/src/mcp/local/pdg-impact.js', async (importOriginal) => {
+vi.mock('../mygitnexus/src/mcp/local/pdg-impact.js', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return { ...actual, pdgStampForMode: vi.fn().mockResolvedValue(false) };
 });
 
-import { LocalBackend } from '../gitnexus/src/mcp/local/local-backend.js';
+import { LocalBackend } from '../mygitnexus/src/mcp/local/local-backend.js';
 
 describe('hidden oracle: pdg_query missing sub-layer note', () => {
   it.each([
@@ -25,6 +25,6 @@ describe('hidden oracle: pdg_query missing sub-layer note', () => {
 
     expect(result).toMatchObject({ mode, results: [], total: 0 });
     expect(String(result.note)).toContain(expectedLayer);
-    expect(String(result.note)).toContain('gitnexus analyze --pdg');
+    expect(String(result.note)).toContain('mygitnexus analyze --pdg');
   });
 });

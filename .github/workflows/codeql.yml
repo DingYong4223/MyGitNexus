@@ -53,16 +53,16 @@ jobs:
           languages: ${{ matrix.language }}
           queries: security-and-quality
           # Exclude generated/vendored code; tune after first-run signal.
-          # gitnexus/vendor/ holds tree-sitter-proto sources (regenerated, not authored).
+          # mygitnexus/vendor/ holds tree-sitter-proto sources (regenerated, not authored).
           # CodeQL path filters use .gitignore-style globs and do NOT support
           # brace expansion — list each generated parser file separately.
           config: |
             paths-ignore:
               - '**/dist/**'
               - '**/node_modules/**'
-              - 'gitnexus/vendor/**'
-              - 'gitnexus/src/core/parsing/**/parser.c'
-              - 'gitnexus/src/core/parsing/**/parser.js'
+              - 'mygitnexus/vendor/**'
+              - 'mygitnexus/src/core/parsing/**/parser.c'
+              - 'mygitnexus/src/core/parsing/**/parser.js'
               # Test fixtures are intentionally synthetic inputs (broken/unused
               # code, malformed samples) used to exercise the analyzer. CodeQL
               # findings here are noise, not real bugs. The second glob also

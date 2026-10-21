@@ -5,7 +5,7 @@ name: Tree-sitter Upgrade Readiness
 #      with tree-sitter@0.25.0 without --legacy-peer-deps?
 #   2. Vendored grammars — each grammar in .github/vendored-grammars.json
 #      (c/swift/kotlin/dart/proto) is classified by its vendored ABI, read
-#      straight from gitnexus/vendor/<name>/src/parser.c (NOT node_modules,
+#      straight from mygitnexus/vendor/<name>/src/parser.c (NOT node_modules,
 #      which is never populated for vendored grammars — that mismatch is why
 #      the report used to render bare "?" placeholders, #858).
 # See .github/scripts/check-tree-sitter-upgrade-readiness.py for the logic.
@@ -14,7 +14,7 @@ name: Tree-sitter Upgrade Readiness
 # SET + policy holds: this readiness report and grammar-update-monitor.yml both
 # read it, so the two workflows can never disagree about which grammars are
 # vendored. (The monitor also resolves upstreams from it; this report keeps its
-# own upstream-drift coords and reads vendored ABIs from gitnexus/vendor/.)
+# own upstream-drift coords and reads vendored ABIs from mygitnexus/vendor/.)
 #
 # Concurrency convention: see CONTRIBUTING.md → "GitHub Actions — Concurrency Convention".
 
@@ -56,13 +56,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-gitnexus
+      - uses: ./.github/actions/setup-mygitnexus
         with:
           build: 'false'
 
       # Guard the readiness script's logic (vendored classification, no bare "?",
       # the manifest⇄vendor-dir consistency guard). Stdlib-only, so no extra deps;
-      # node_modules is populated by setup-gitnexus above, which the npm-path ABI
+      # node_modules is populated by setup-mygitnexus above, which the npm-path ABI
       # reads need. Runs only on validation events (PR / manual), not the daily
       # scheduled report.
       - name: Run readiness script unit tests

@@ -50,7 +50,7 @@ async function waitForServer(port, retries = 30) {
 let tmpDir, serverPort, child;
 
 before(async () => {
-  tmpDir = await mkdtemp(join(tmpdir(), 'gitnexus-docker-test-'));
+  tmpDir = await mkdtemp(join(tmpdir(), 'mygitnexus-docker-test-'));
   const distDir = join(tmpDir, 'dist');
   const assetsDir = join(distDir, 'assets');
   await mkdir(assetsDir, { recursive: true });
@@ -150,7 +150,7 @@ function spawnServerWithEnv(cwd, port, env) {
 }
 
 async function withInjectionServer(envOverrides, fn) {
-  const dir = await mkdtemp(join(tmpdir(), 'gitnexus-inject-'));
+  const dir = await mkdtemp(join(tmpdir(), 'mygitnexus-inject-'));
   const distDir = join(dir, 'dist');
   const assetsDir = join(distDir, 'assets');
   await mkdir(assetsDir, { recursive: true });
@@ -171,25 +171,25 @@ async function withInjectionServer(envOverrides, fn) {
   }
 }
 
-it('injects __GITNEXUS_CONFIG__ into / when GITNEXUS_BACKEND_URL is valid', async () => {
-  await withInjectionServer({ GITNEXUS_BACKEND_URL: 'http://10.0.0.1:4747' }, async (port) => {
+it('injects __MYGITNEXUS_CONFIG__ into / when MYGITNEXUS_BACKEND_URL is valid', async () => {
+  await withInjectionServer({ MYGITNEXUS_BACKEND_URL: 'http://10.0.0.1:4747' }, async (port) => {
     const res = await rawGet(port, '/');
     assert.equal(res.status, 200);
     assert.ok(
-      res.body.includes('window.__GITNEXUS_CONFIG__'),
-      'Expected __GITNEXUS_CONFIG__ in response body',
+      res.body.includes('window.__MYGITNEXUS_CONFIG__'),
+      'Expected __MYGITNEXUS_CONFIG__ in response body',
     );
     assert.ok(res.body.includes('http://10.0.0.1:4747'), 'Expected backend URL in response body');
   });
 });
 
-it('injects __GITNEXUS_CONFIG__ into SPA fallback routes', async () => {
-  await withInjectionServer({ GITNEXUS_BACKEND_URL: 'http://10.0.0.1:4747' }, async (port) => {
+it('injects __MYGITNEXUS_CONFIG__ into SPA fallback routes', async () => {
+  await withInjectionServer({ MYGITNEXUS_BACKEND_URL: 'http://10.0.0.1:4747' }, async (port) => {
     const res = await rawGet(port, '/some/deep/link');
     assert.equal(res.status, 200);
     assert.ok(
-      res.body.includes('window.__GITNEXUS_CONFIG__'),
-      'Expected __GITNEXUS_CONFIG__ in SPA fallback response',
+      res.body.includes('window.__MYGITNEXUS_CONFIG__'),
+      'Expected __MYGITNEXUS_CONFIG__ in SPA fallback response',
     );
     assert.ok(
       res.body.includes('http://10.0.0.1:4747'),
@@ -198,42 +198,42 @@ it('injects __GITNEXUS_CONFIG__ into SPA fallback routes', async () => {
   });
 });
 
-it('does not inject when GITNEXUS_BACKEND_URL is not set', async () => {
+it('does not inject when MYGITNEXUS_BACKEND_URL is not set', async () => {
   await withInjectionServer({}, async (port) => {
     const res = await rawGet(port, '/');
     assert.equal(res.status, 200);
     assert.ok(
-      !res.body.includes('__GITNEXUS_CONFIG__'),
-      'Expected no __GITNEXUS_CONFIG__ when env var is unset',
+      !res.body.includes('__MYGITNEXUS_CONFIG__'),
+      'Expected no __MYGITNEXUS_CONFIG__ when env var is unset',
     );
   });
 });
 
-it('does not inject when GITNEXUS_BACKEND_URL is invalid', async () => {
-  await withInjectionServer({ GITNEXUS_BACKEND_URL: 'not-a-url' }, async (port) => {
+it('does not inject when MYGITNEXUS_BACKEND_URL is invalid', async () => {
+  await withInjectionServer({ MYGITNEXUS_BACKEND_URL: 'not-a-url' }, async (port) => {
     const res = await rawGet(port, '/');
     assert.equal(res.status, 200);
     assert.ok(
-      !res.body.includes('__GITNEXUS_CONFIG__'),
-      'Expected no __GITNEXUS_CONFIG__ for invalid URL',
+      !res.body.includes('__MYGITNEXUS_CONFIG__'),
+      'Expected no __MYGITNEXUS_CONFIG__ for invalid URL',
     );
   });
 });
 
-it('does not inject when GITNEXUS_BACKEND_URL uses a non-http protocol', async () => {
-  await withInjectionServer({ GITNEXUS_BACKEND_URL: 'ftp://somehost:21' }, async (port) => {
+it('does not inject when MYGITNEXUS_BACKEND_URL uses a non-http protocol', async () => {
+  await withInjectionServer({ MYGITNEXUS_BACKEND_URL: 'ftp://somehost:21' }, async (port) => {
     const res = await rawGet(port, '/');
     assert.equal(res.status, 200);
     assert.ok(
-      !res.body.includes('__GITNEXUS_CONFIG__'),
-      'Expected no __GITNEXUS_CONFIG__ for non-http protocol',
+      !res.body.includes('__MYGITNEXUS_CONFIG__'),
+      'Expected no __MYGITNEXUS_CONFIG__ for non-http protocol',
     );
   });
 });
 
-it('escapes </script> in GITNEXUS_BACKEND_URL to prevent XSS', async () => {
+it('escapes </script> in MYGITNEXUS_BACKEND_URL to prevent XSS', async () => {
   const xssUrl = 'http://example.com/?x=</script><script>alert(1)</script>';
-  await withInjectionServer({ GITNEXUS_BACKEND_URL: xssUrl }, async (port) => {
+  await withInjectionServer({ MYGITNEXUS_BACKEND_URL: xssUrl }, async (port) => {
     const res = await rawGet(port, '/');
     assert.equal(res.status, 200);
 
@@ -253,11 +253,11 @@ it('escapes </script> in GITNEXUS_BACKEND_URL to prevent XSS', async () => {
 });
 
 it('does not inject config into static assets', async () => {
-  await withInjectionServer({ GITNEXUS_BACKEND_URL: 'http://10.0.0.1:4747' }, async (port) => {
+  await withInjectionServer({ MYGITNEXUS_BACKEND_URL: 'http://10.0.0.1:4747' }, async (port) => {
     const res = await rawGet(port, '/assets/style.abc.css');
     assert.equal(res.status, 200);
     assert.ok(
-      !res.body.includes('__GITNEXUS_CONFIG__'),
+      !res.body.includes('__MYGITNEXUS_CONFIG__'),
       'Static assets must not contain injected config',
     );
     assert.equal(res.body, 'body{}');

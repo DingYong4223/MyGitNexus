@@ -220,8 +220,8 @@ def build_proposer_prompt(
     )
     learnings_block = f"{len(learnings)} row(s) in /evidence/learnings.json"
     gate_block = f"{len(gate_summary)} decision(s) in /evidence/gate-summary.json"
-    return f"""You are improving the GitNexus engineering skill family from benchmark
-evidence. You are inside a throwaway clone of the GitNexus repo — the
+    return f"""You are improving the MyGitNexus engineering skill family from benchmark
+evidence. You are inside a throwaway clone of the MyGitNexus repo — the
 incumbent skills are at .claude/skills/<name>/SKILL.md. Read the ones the
 evidence implicates before proposing anything.
 
@@ -259,8 +259,8 @@ Rules — the harness re-validates most of these, so a violation wastes the run:
 - Do not modify anything outside {overlay_dir} and {proposal_path} — no task
   files, no verify commands, no source code, no canonical skills.
 - Preserve invocation literals that repo tests pin verbatim (e.g. the exact
-  string `node .gitnexus/run.cjs analyze`); see
-  gitnexus/test/unit/skills-steering.test.ts before rewording any command.
+  string `node .mygitnexus/run.cjs analyze`); see
+  mygitnexus/test/unit/skills-steering.test.ts before rewording any command.
 - Never weaken the skills' hard gates: impact-before-edit,
   detect_changes-before-commit, foreground verification.
 - Keep the edit small — a rule added, sharpened, or deleted; a budget
@@ -665,7 +665,7 @@ def runner_environment(args: argparse.Namespace) -> dict[str, str]:
         "GIT_TERMINAL_PROMPT": "0",
     }
     if args.auth_token:
-        env["GITNEXUS_BENCH_AUTH_TOKEN"] = args.auth_token
+        env["MYGITNEXUS_BENCH_AUTH_TOKEN"] = args.auth_token
     return env
 
 
@@ -826,8 +826,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--base-url", default=None)
     parser.add_argument(
         "--auth-token",
-        default=os.environ.get("GITNEXUS_BENCH_AUTH_TOKEN"),
-        help="explicit API key for bare Claude sessions (prefer GITNEXUS_BENCH_AUTH_TOKEN env)",
+        default=os.environ.get("MYGITNEXUS_BENCH_AUTH_TOKEN"),
+        help="explicit API key for bare Claude sessions (prefer MYGITNEXUS_BENCH_AUTH_TOKEN env)",
     )
     parser.add_argument("--promotion-metric", default="cost_usd")
     parser.add_argument("--promotion-min-runs", type=int, default=3)
@@ -1033,7 +1033,7 @@ def main() -> int:
                     print(f"  {path}")
                 print(
                     "Next: review the diff, run "
-                    "`cd gitnexus && npx vitest run test/unit/shipped-skills-sync.test.ts "
+                    "`cd mygitnexus && npx vitest run test/unit/shipped-skills-sync.test.ts "
                     "test/unit/skills-steering.test.ts`, and open a PR citing "
                     f"{bench_dir}/promotion.json and {gen_dir / 'proposal.md'}."
                 )

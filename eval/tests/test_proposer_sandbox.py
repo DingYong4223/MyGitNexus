@@ -350,13 +350,13 @@ def test_node_modules_mounts_get_a_writable_vite_temp_overlay(tmp_path: Path) ->
         claude_bin=executable,
         bwrap_bin=executable,
         preflight=False,
-        read_only_mounts=(ReadOnlyMount(source=deps, target="/workspace/gitnexus/node_modules"),),
+        read_only_mounts=(ReadOnlyMount(source=deps, target="/workspace/mygitnexus/node_modules"),),
     ) as sandbox:
         argv = sandbox.command_prefix
 
-    bind_index = argv.index("/workspace/gitnexus/node_modules")
-    assert argv[bind_index - 2 : bind_index + 1] == ["--ro-bind", str(deps), "/workspace/gitnexus/node_modules"]
-    overlay = f"/workspace/gitnexus/node_modules/{VITE_TEMP_DIR}"
+    bind_index = argv.index("/workspace/mygitnexus/node_modules")
+    assert argv[bind_index - 2 : bind_index + 1] == ["--ro-bind", str(deps), "/workspace/mygitnexus/node_modules"]
+    overlay = f"/workspace/mygitnexus/node_modules/{VITE_TEMP_DIR}"
     overlay_index = argv.index(overlay)
     assert argv[overlay_index - 1] == "--tmpfs"
     # the overlay must come AFTER the read-only bind, or the bind would mask it
@@ -364,7 +364,7 @@ def test_node_modules_mounts_get_a_writable_vite_temp_overlay(tmp_path: Path) ->
 
 
 def test_node_modules_mount_without_a_captured_vite_temp_gets_no_overlay(tmp_path: Path) -> None:
-    # The trusted GitNexus runtime mounts /opt/gitnexus/node_modules, whose
+    # The trusted MyGitNexus runtime mounts /opt/mygitnexus/node_modules, whose
     # source is the built runtime and does NOT carry a .vite-temp. bwrap cannot
     # mkdir a mount point inside a read-only bind, so overlaying it would fail
     # with "Can't mkdir .../node_modules/.vite-temp: Read-only file system".
@@ -383,11 +383,11 @@ def test_node_modules_mount_without_a_captured_vite_temp_gets_no_overlay(tmp_pat
         claude_bin=executable,
         bwrap_bin=executable,
         preflight=False,
-        read_only_mounts=(ReadOnlyMount(source=runtime, target="/opt/gitnexus/node_modules"),),
+        read_only_mounts=(ReadOnlyMount(source=runtime, target="/opt/mygitnexus/node_modules"),),
     ) as sandbox:
         argv = sandbox.command_prefix
 
-    assert "/opt/gitnexus/node_modules" in argv
+    assert "/opt/mygitnexus/node_modules" in argv
     assert not any(str(item).endswith(f"/{VITE_TEMP_DIR}") for item in argv)
 
 
@@ -416,7 +416,7 @@ def test_non_node_modules_mounts_get_no_vite_temp_overlay(tmp_path: Path) -> Non
 
 def test_stricter_prefix_freezes_evaluated_skills_and_can_unshare_network(tmp_path: Path) -> None:
     clone = tmp_path / "clone"
-    skill = clone / ".claude" / "skills" / "gitnexus-work"
+    skill = clone / ".claude" / "skills" / "mygitnexus-work"
     skill.mkdir(parents=True)
     (skill / "SKILL.md").write_text("trusted")
     executable = tmp_path / "executable"
@@ -435,7 +435,7 @@ def test_stricter_prefix_freezes_evaluated_skills_and_can_unshare_network(tmp_pa
         )
 
     assert "--unshare-net" in prefix
-    skill_target = "/workspace/.claude/skills/gitnexus-work"
+    skill_target = "/workspace/.claude/skills/mygitnexus-work"
     target_index = prefix.index(skill_target)
     assert prefix[target_index - 2 : target_index + 1] == ["--ro-bind", str(skill), skill_target]
     user_index = prefix.index(SANDBOX_USER_SKILLS)
@@ -443,7 +443,7 @@ def test_stricter_prefix_freezes_evaluated_skills_and_can_unshare_network(tmp_pa
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
     reason="real Bubblewrap canary is mandatory in the named Ubuntu CI job",
 )
 def test_real_bubblewrap_runs_node_from_outside_the_bound_trees(tmp_path: Path, monkeypatch) -> None:
@@ -480,7 +480,7 @@ def test_real_bubblewrap_runs_node_from_outside_the_bound_trees(tmp_path: Path, 
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
     reason="real Bubblewrap canary is mandatory in the named Ubuntu CI job",
 )
 def test_real_bubblewrap_runs_npx_from_outside_the_bound_trees(tmp_path: Path, monkeypatch) -> None:
@@ -488,7 +488,7 @@ def test_real_bubblewrap_runs_npx_from_outside_the_bound_trees(tmp_path: Path, m
     # INSTALL (bin/ + lib/node_modules, not just the binary) to a fresh path
     # outside /usr, /bin, /lib and /lib64 reproduces actions/setup-node's
     # tool-cache convention. Every task verify command is
-    # "cd gitnexus && npx tsc ... && npx vitest ...", so npx must resolve
+    # "cd mygitnexus && npx tsc ... && npx vitest ...", so npx must resolve
     # inside the sandbox; argv assertions cannot prove a bwrap-level mount
     # actually works, only a real invocation can.
     real_node = shutil.which("node")
@@ -515,12 +515,12 @@ def test_real_bubblewrap_runs_npx_from_outside_the_bound_trees(tmp_path: Path, m
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
     reason="real Bubblewrap canary is mandatory in the named Ubuntu CI job",
 )
 def test_real_bubblewrap_blocks_repo_skill_edits_and_home_shadowing(tmp_path: Path) -> None:
     clone = tmp_path / "clone"
-    skill = clone / ".claude" / "skills" / "gitnexus-work"
+    skill = clone / ".claude" / "skills" / "mygitnexus-work"
     skill.mkdir(parents=True)
     prompt = skill / "SKILL.md"
     prompt.write_text("trusted")
@@ -528,8 +528,8 @@ def test_real_bubblewrap_blocks_repo_skill_edits_and_home_shadowing(tmp_path: Pa
     script = """
 from pathlib import Path
 targets = [
-    Path('/workspace/.claude/skills/gitnexus-work/SKILL.md'),
-    Path('/home/agent/.claude/skills/gitnexus-work/SKILL.md'),
+    Path('/workspace/.claude/skills/mygitnexus-work/SKILL.md'),
+    Path('/home/agent/.claude/skills/mygitnexus-work/SKILL.md'),
     Path('/opt/claude/shell-prefix'),
 ]
 for target in targets:
@@ -556,7 +556,7 @@ Path('/workspace/unrelated-write').write_text('ok')
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
     reason="real Bubblewrap canary is mandatory in the named Ubuntu CI job",
 )
 def test_real_bubblewrap_verifier_cannot_rewrite_credited_source_or_oracle(tmp_path: Path) -> None:
@@ -691,15 +691,15 @@ def test_preflight_failure_is_returned_before_a_model_command(monkeypatch, tmp_p
 def test_task_assets_are_copied_or_bound_without_symlink_escape(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     clone = tmp_path / "clone"
-    (repo / ".gitnexus").mkdir(parents=True)
+    (repo / ".mygitnexus").mkdir(parents=True)
     clone.mkdir()
-    source = repo / ".gitnexus" / "meta.json"
+    source = repo / ".mygitnexus" / "meta.json"
     source.write_text("{}")
     deps = repo / "node_modules"
     deps.mkdir()
 
     task = {
-        "sandbox_copy": [".gitnexus/meta.json"],
+        "sandbox_copy": [".mygitnexus/meta.json"],
         "sandbox_dependencies": [{"source": "node_modules", "target": "node_modules"}],
     }
     with TaskAssetCache(tmp_path / "asset-cache") as cache:
@@ -711,7 +711,7 @@ def test_task_assets_are_copied_or_bound_without_symlink_escape(tmp_path: Path) 
             snapshot=snapshot,
         )
 
-        copied = clone / ".gitnexus" / "meta.json"
+        copied = clone / ".mygitnexus" / "meta.json"
         assert copied.read_text() == "{}"
         assert copied.stat().st_ino != source.stat().st_ino
         assert mounts[0].source != deps.resolve()
@@ -764,7 +764,7 @@ def test_task_asset_targets_never_follow_clone_symlink_parents(tmp_path: Path, k
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
     reason="real Bubblewrap canary is mandatory in the named Ubuntu CI job",
 )
 def test_real_bubblewrap_denies_parent_read_and_allows_clone_write(tmp_path: Path) -> None:
@@ -793,13 +793,13 @@ def test_real_bubblewrap_denies_parent_read_and_allows_clone_write(tmp_path: Pat
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_BWRAP_CANARY") != "1",
     reason="real Bubblewrap canary is mandatory in the named Ubuntu CI job",
 )
 def test_clone_controlled_mcp_replacement_is_never_executed_or_credentialed(tmp_path: Path) -> None:
     clone = tmp_path / "clone"
-    (clone / ".gitnexus").mkdir(parents=True)
-    replacement = clone / ".gitnexus" / "run.cjs"
+    (clone / ".mygitnexus").mkdir(parents=True)
+    replacement = clone / ".mygitnexus" / "run.cjs"
     replacement.write_text(
         "const fs=require('fs');"
         "let observed='no-key';"
@@ -815,8 +815,8 @@ def test_clone_controlled_mcp_replacement_is_never_executed_or_credentialed(tmp_
     trusted_entrypoint.write_text(
         "process.stdout.write(process.env.ANTHROPIC_API_KEY ? 'credential-leaked' : 'credential-absent');"
     )
-    mount = ReadOnlyMount(source=trusted_runtime, target=runner.SANDBOX_GITNEXUS)
-    server = json.loads(runner.sandbox_mcp_config())["mcpServers"]["gitnexus"]
+    mount = ReadOnlyMount(source=trusted_runtime, target=runner.SANDBOX_MYGITNEXUS)
+    server = json.loads(runner.sandbox_mcp_config())["mcpServers"]["mygitnexus"]
 
     with prepare_sandbox(
         clone=clone,
@@ -836,7 +836,7 @@ def test_clone_controlled_mcp_replacement_is_never_executed_or_credentialed(tmp_
 
 
 @pytest.mark.skipif(
-    os.environ.get("GITNEXUS_REQUIRE_CLAUDE_CANARY") != "1",
+    os.environ.get("MYGITNEXUS_REQUIRE_CLAUDE_CANARY") != "1",
     reason="real Claude/Bash/MCP canary is mandatory in the named Ubuntu CI job",
 )
 def test_real_claude_bare_auth_inner_sandbox_and_mcp_permissions(tmp_path: Path) -> None:
@@ -915,7 +915,7 @@ for line in sys.stdin:
                     {
                         "type": "tool_use",
                         "id": "toolu_mcp_canary",
-                        "name": "mcp__gitnexus__list_repos",
+                        "name": "mcp__mygitnexus__list_repos",
                         "input": {},
                     }
                 ]
@@ -1009,7 +1009,7 @@ for line in sys.stdin:
         mcp_config = json.dumps(
             {
                 "mcpServers": {
-                    "gitnexus": {
+                    "mygitnexus": {
                         "type": "stdio",
                         "command": "/usr/bin/env",
                         "args": [
@@ -1046,7 +1046,7 @@ for line in sys.stdin:
                     "claude-canary-20260718",
                     "--allowedTools",
                     "Bash",
-                    "mcp__gitnexus__list_repos",
+                    "mcp__mygitnexus__list_repos",
                 ],
                 timeout=60,
                 env=sandbox.environment(

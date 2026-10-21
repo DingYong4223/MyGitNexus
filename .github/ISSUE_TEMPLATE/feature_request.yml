@@ -14,8 +14,8 @@ body:
       label: Area
       description: Primary part of the monorepo this relates to.
       options:
-        - gitnexus (CLI / core / indexing / MCP server)
-        - gitnexus-web (browser UI / WASM / workers)
+        - mygitnexus (CLI / core / indexing / MCP server)
+        - mygitnexus-web (browser UI / WASM / workers)
         - CI / release / packaging
         - Documentation / developer experience
         - Other

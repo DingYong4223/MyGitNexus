@@ -1,0 +1,25 @@
+{
+  "name": "mygitnexus",
+  "description": "Code intelligence powered by a knowledge graph. Provides execution flow tracing, blast radius analysis, and augmented search across your codebase.",
+  "version": "0.0.1",
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "MyGitNexus",
+    "category": "Developer Tools",
+    "capabilities": [
+      "code-exploration",
+      "impact-analysis",
+      "debugging",
+      "refactoring",
+      "code-review"
+    ]
+  },
+  "author": {
+    "name": "MyGitNexus"
+  },
+  "homepage": "https://github.com/DingYong4223/MyGitNexus",
+  "repository": "https://github.com/DingYong4223/MyGitNexus",
+  "keywords": ["code-intelligence", "knowledge-graph", "mcp", "static-analysis"]
+}

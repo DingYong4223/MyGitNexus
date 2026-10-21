@@ -16,6 +16,6 @@ coverage
 
 **/*.tsbuildinfo
 
-.gitnexus
-gitnexus-web/playwright-report
-gitnexus-web/test-results
+.mygitnexus
+mygitnexus-web/playwright-report
+mygitnexus-web/test-results

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { dispatchChunkParse } from '../gitnexus/src/core/ingestion/parsing-processor.js';
+import { dispatchChunkParse } from '../mygitnexus/src/core/ingestion/parsing-processor.js';
 import {
   WorkerPoolInitializationError,
   type WorkerPool,
-} from '../gitnexus/src/core/ingestion/workers/worker-pool.js';
+} from '../mygitnexus/src/core/ingestion/workers/worker-pool.js';
 
 const files = [{ path: 'src/retry.ts', content: 'export const retry = true;\n' }];
 

@@ -345,8 +345,8 @@ def test_hidden_oracle_uses_digest_bound_staged_config_not_candidate_config(
     (source / "oracle.test.ts").write_text("hidden test")
     task = oracle_task(
         command=(
-            'npx vitest run --config "$GITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts" '
-            '"$GITNEXUS_BENCH_ORACLE_ROOT/nested/oracle.test.ts"'
+            'npx vitest run --config "$MYGITNEXUS_BENCH_ORACLE_ROOT/vitest.config.mts" '
+            '"$MYGITNEXUS_BENCH_ORACLE_ROOT/nested/oracle.test.ts"'
         )
     )
     task["oracle"]["files"].insert(  # type: ignore[index]
@@ -369,9 +369,9 @@ def test_hidden_oracle_uses_digest_bound_staged_config_not_candidate_config(
         oracle_env_root = kwargs["env"][oracle_assets.ORACLE_ENV_VAR]
         assert oracle_env_root.startswith("/workspace/.wfbench-oracle-")
         assert Path(oracle_env_root).parent == Path("/workspace")
-        # A hidden test's ../gitnexus import must resolve to the credited
-        # candidate checkout, not to an unrelated /opt/gitnexus tree.
-        assert Path(oracle_env_root).parent / "gitnexus" == Path("/workspace/gitnexus")
+        # A hidden test's ../mygitnexus import must resolve to the credited
+        # candidate checkout, not to an unrelated /opt/mygitnexus tree.
+        assert Path(oracle_env_root).parent / "mygitnexus" == Path("/workspace/mygitnexus")
         prefix_options = sandbox_instance.command_prefix_calls[-1]
         assert prefix_options["read_only_workspace"] is True
         assert prefix_options["unshare_network"] is True
@@ -405,20 +405,20 @@ def test_hidden_vitest_config_executes_sibling_oracle_against_candidate_checkout
     """Exercise the shipped config with the same sibling layout used by bwrap."""
 
     repository_root = Path(__file__).resolve().parents[2]
-    vitest = repository_root / "gitnexus" / "node_modules" / ".bin" / "vitest"
+    vitest = repository_root / "mygitnexus" / "node_modules" / ".bin" / "vitest"
     if not vitest.is_file():
-        pytest.skip("GitNexus Vitest dependencies are not installed")
+        pytest.skip("MyGitNexus Vitest dependencies are not installed")
 
     workspace = tmp_path / "workspace"
-    candidate = workspace / "gitnexus"
+    candidate = workspace / "mygitnexus"
     candidate.mkdir(parents=True)
     (candidate / "candidate.ts").write_text("export const candidateValue = 'candidate-workspace';\n")
 
     # The test file is a workspace sibling, so bare `vitest` imports resolve
     # through this harness dependency link while candidate-relative imports
-    # resolve through ../gitnexus exactly as they do in the sandbox.
-    (workspace / "node_modules").symlink_to(repository_root / "gitnexus" / "node_modules", target_is_directory=True)
-    (candidate / "node_modules").symlink_to(repository_root / "gitnexus" / "node_modules", target_is_directory=True)
+    # resolve through ../mygitnexus exactly as they do in the sandbox.
+    (workspace / "node_modules").symlink_to(repository_root / "mygitnexus" / "node_modules", target_is_directory=True)
+    (candidate / "node_modules").symlink_to(repository_root / "mygitnexus" / "node_modules", target_is_directory=True)
 
     hidden = workspace / ".wfbench-oracle-smoke"
     hidden.mkdir()
@@ -430,7 +430,7 @@ def test_hidden_vitest_config_executes_sibling_oracle_against_candidate_checkout
     oracle.write_text(
         "import { writeFileSync } from 'node:fs';\n"
         "import { expect, test } from 'vitest';\n"
-        "import { candidateValue } from '../gitnexus/candidate';\n"
+        "import { candidateValue } from '../mygitnexus/candidate';\n"
         "test('uses the credited candidate checkout', () => {\n"
         "  expect(candidateValue).toBe('candidate-workspace');\n"
         "  writeFileSync(process.env.ORACLE_SENTINEL!, `ran:${candidateValue}`);\n"
