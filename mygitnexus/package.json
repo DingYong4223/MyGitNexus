@@ -99,7 +99,7 @@
   },
   "devDependencies": {
     "@babel/generator": "^8.0.0",
-    "@babel/parser": "^8.0.0",
+    "@babel/parser": "^8.0.7",
     "@babel/traverse": "^8.0.0",
     "@babel/types": "^8.0.0",
     "@types/busboy": "^1.5.4",
