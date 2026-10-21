@@ -64,7 +64,7 @@
     "commander": "^15.0.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.4.1",
+    "express-rate-limit": "^8.7.1",
     "glob": "^13.0.6",
     "graphology": "^0.26.0",
     "graphology-indices": "^0.17.0",
